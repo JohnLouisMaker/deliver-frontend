@@ -1,7 +1,9 @@
+import LoginPage from "./Login";
+
 export default function App() {
   return (
     <div>
-      <h1>hello world</h1>
+      <LoginPage />{" "}
     </div>
-  )
+  );
 }
