@@ -1,16 +1,47 @@
-import { ArrowRight, Hamburger, Lock, Mail } from "lucide-react";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import "../index.css";
+import { ArrowRight, Hamburger, Lock, Mail } from "lucide-react";
+
+import { AxiosError } from "axios";
+import api from "../lib/api";
+import { useAuthStore } from "../store/authStore";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
+  const login = useAuthStore((state) => state.login);
+  const navigate = useNavigate();
+
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    console.log("Enviando:", { email, password });
-  };
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await api.post("/auth/login", {
+        email,
+        senha: password,
+      });
+
+      const { access_token, refresh_token } = response.data;
+      await login(access_token, refresh_token);
+      navigate("/home");
+
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
+      const message =
+        error.response?.data?.message ||
+        "Erro ao fazer login. Tente novamente.";
+
+      setError(message);
+      setIsLoading(false);
+    }
+  }
 
   return (
     <div className="min-h-screen flex font-sans bg-slate-50">
@@ -79,12 +110,18 @@ export default function LoginPage() {
           </header>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-lg">
+                {error}
+              </div>
+            )}
             <div className="space-y-5">
               {/* EMAIL */}
               <div className="group">
-                <label 
-                htmlFor="email"
-                className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 group-focus-within:text-orange-600 transition-colors">
+                <label
+                  htmlFor="email"
+                  className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 group-focus-within:text-orange-600 transition-colors"
+                >
                   Endereço de E-mail
                 </label>
                 <div className="relative">
@@ -106,8 +143,9 @@ export default function LoginPage() {
               <div className="group">
                 <div className="flex justify-between items-end mb-2">
                   <label
-                  htmlFor="login-password"
-                  className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-orange-600 transition-colors">
+                    htmlFor="login-password"
+                    className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-orange-600 transition-colors"
+                  >
                     Senha
                   </label>
                 </div>
@@ -126,7 +164,7 @@ export default function LoginPage() {
                 </div>
                 <button
                   type="button"
-                  className="text-xs font-bold text-slate-400 hover:text-orange-700 transition-colors"
+                  className="text-xs font-bold text-slate-400 hover:text-orange-700 transition-colors mt-2"
                 >
                   Esqueceu a Senha?
                 </button>
@@ -135,11 +173,14 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full bg-slate-900 hover:bg-orange-600 text-white font-bold py-5 rounded-2xl shadow-2xl shadow-slate-200 hover:shadow-orange-200 active:scale-[0.97] transition-all duration-300 flex items-center justify-center gap-3 group overflow-hidden relative"
+              disabled={isLoading}
+              className="w-full bg-slate-900 hover:bg-orange-600 text-white font-bold py-5 rounded-2xl shadow-2xl shadow-slate-200 hover:shadow-orange-200 active:scale-[0.97] transition-all duration-300 flex items-center justify-center gap-3 group overflow-hidden relative disabled:opacity-70"
             >
               <span className="z-10 flex items-center gap-2 uppercase tracking-widest">
-                Entrar na Conta
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                {isLoading ? "Entrando..." : "Entrar na Conta"}
+                {!isLoading && (
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                )}
               </span>
             </button>
           </form>
