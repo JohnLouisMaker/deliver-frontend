@@ -1,74 +1,85 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-
-import "../index.css";
-import { ArrowRight, Hamburger, Lock, Mail } from "lucide-react";
-
+import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
-import api from "../lib/api";
-import { useAuthStore } from "../store/authStore";
+import { AlertCircle, ArrowRight, Hamburger, Lock, Mail } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+
+import api from "../api/api";
+import { type LoginData, loginSchema } from "../schemas/authSchema";
+import useAuthStore from "../store/authStore";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const login = useAuthStore((state) => state.login);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const { login, isLoading, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
 
-  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
+  // React Hook Form com Zod
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginData>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  // Redireciona se já estiver autenticado (Segurança extra)
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/home", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  async function onSubmit(data: LoginData) {
+    setServerError(null);
 
     try {
-      const response = await api.post("/auth/login", {
-        email,
-        senha: password,
+      // 1. Faz a chamada de login para obter os tokens
+      const response = await api.post("/auth/auth/login", {
+        email: data.email,
+        senha: data.password,
       });
 
       const { access_token, refresh_token } = response.data;
+
+      // 2. Chama a função login da store que configuramos (ela busca o /me e salva tokens)
       await login(access_token, refresh_token);
-      navigate("/home");
 
+      // O redirecionamento acontece via o useEffect de isAuthenticated
     } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
+      const axiosError = err as AxiosError<{ detail?: string }>;
       const message =
-        error.response?.data?.message ||
-        "Erro ao fazer login. Tente novamente.";
-
-      setError(message);
-      setIsLoading(false);
+        axiosError.response?.data?.detail || "E-mail ou senha incorretos.";
+      setServerError(message);
     }
   }
 
   return (
     <div className="min-h-screen flex font-sans bg-slate-50">
-      {/* LADO ESQUERDO - DESKTOP */}
+      {/* LADO ESQUERDO - DESKTOP (Mantive seu design incrível) */}
       <div className="hidden lg:flex lg:w-3/5 bg-orange-600 flex-col justify-between p-20 relative overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-orange-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-orange-400 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-orange-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-orange-400 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000" />
 
         <div className="flex items-center gap-4 z-10">
-          <div className="p-3 bg-white backdrop-blur-md rounded-2xl shadow-2xl transform hover:rotate-0 -rotate-12 transition-transform duration-500">
+          <div className="p-3 bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl -rotate-12 hover:rotate-0 transition-transform duration-500">
             <Hamburger className="text-orange-600 w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-heading font-black text-white tracking-widest uppercase">
+          <h1 className="text-2xl font-black text-white tracking-widest uppercase">
             Menuu DELIVER<span className="text-orange-200">.</span>
           </h1>
         </div>
 
         <div className="z-10 max-w-xl">
-          <h2 className="text-8xl font-heading font-black text-white leading-[0.85] tracking-tighter uppercase mb-6">
+          <h2 className="text-8xl font-black text-white leading-[0.85] tracking-tighter uppercase mb-6">
             MATE SUA <br />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-100 to-orange-300">
+            <span className="bg-linear-to-r  from-orange-100 to-orange-300 bg-clip-text display  text-transparent ">
               FOME
             </span>
             <br />
             EM UM CLIQUE.
           </h2>
-          <div className="h-2 w-24 bg-white mb-8 rounded-full"></div>
+          <div className="h-2 w-24 bg-white mb-8 rounded-full" />
           <p className="text-orange-50 text-xl font-medium opacity-80 leading-relaxed">
             A plataforma definitiva para quem busca rapidez, sabor e os melhores
             restaurantes da cidade em um só lugar.
@@ -79,120 +90,116 @@ export default function LoginPage() {
           <span className="text-orange-200 text-sm font-semibold tracking-widest uppercase">
             © 2026 Menuu Deliver
           </span>
-          <div className="flex gap-4">
-            <div className="w-2 h-2 rounded-full bg-white opacity-50"></div>
-            <div className="w-2 h-2 rounded-full bg-white opacity-20"></div>
-            <div className="w-2 h-2 rounded-full bg-white opacity-20"></div>
-          </div>
         </div>
       </div>
 
-      {/* LADO DIREITO: FORMULÁRIO */}
-      <div className="w-full lg:w-2/5 bg-white flex items-center justify-center p-8 lg:p-24 relative">
+      {/* LADO DIREITO - FORMULÁRIO */}
+      <div className="w-full lg:w-2/5 bg-white flex items-center justify-center p-8 lg:p-24">
         <div className="w-full max-w-md">
-          {/* Logo Mobile */}
-          <div className="lg:hidden flex flex-col items-center mb-12">
-            <div className="p-4 bg-orange-600 rounded-3xl shadow-2xl mb-4 rotate-3">
-              <Hamburger className="text-white w-10 h-10" />
-            </div>
-            <h2 className="text-3xl font-heading font-black text-orange-600 uppercase tracking-tighter">
-              Menuu
-            </h2>
-          </div>
-
-          <header className="mb-10">
-            <h3 className="text-4xl text-center lg:text-left font-heading font-extrabold text-slate-900 tracking-tight mb-3">
+          <header className="mb-10 text-center lg:text-left">
+            <h3 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
               Bem-vindo de volta
             </h3>
-            <p className="text-slate-500 font-medium text-lg text-center lg:text-left">
-              Insira suas credenciais para acessar sua mesa.
+            <p className="text-slate-500 text-lg">
+              Insira suas credenciais para continuar
             </p>
           </header>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-lg">
-                {error}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {serverError && (
+              <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-xl flex items-start gap-3">
+                <AlertCircle className="text-red-600 w-5 h-5 shrink-0 mt-0.5" />
+                <p className="text-red-700 text-sm font-medium">
+                  {serverError}
+                </p>
               </div>
             )}
+
             <div className="space-y-5">
-              {/* EMAIL */}
-              <div className="group">
-                <label
-                  htmlFor="email"
-                  className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 group-focus-within:text-orange-600 transition-colors"
-                >
-                  Endereço de E-mail
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+                  E-mail
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-orange-500 transition-colors w-5 h-5" />
+                  <Mail
+                    className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${errors.email ? "text-red-400" : "text-slate-400"}`}
+                  />
                   <input
-                    id="email"
+                    {...register("email")}
                     type="email"
-                    autoComplete="username"
-                    placeholder="nome@exemplo.com"
-                    className="w-full pl-12 pr-4 py-5 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-orange-500 focus:ring-[6px] focus:ring-orange-50 outline-none transition-all duration-300 font-semibold text-slate-700 placeholder:text-slate-300"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    placeholder="seu@email.com"
+                    className={`w-full pl-12 pr-5 py-4 bg-slate-50 border rounded-2xl focus:bg-white outline-none transition-all text-slate-700 ${
+                      errors.email
+                        ? "border-red-500 focus:ring-red-100"
+                        : "border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                    }`}
+                    disabled={isLoading}
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-red-500 text-xs mt-1 font-bold">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
 
-              {/* SENHA */}
-              <div className="group">
-                <div className="flex justify-between items-end mb-2">
-                  <label
-                    htmlFor="login-password"
-                    className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-orange-600 transition-colors"
-                  >
-                    Senha
-                  </label>
-                </div>
+              {/* Senha */}
+              <div>
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+                  Senha
+                </label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-orange-500 transition-colors w-5 h-5" />
+                  <Lock
+                    className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${errors.password ? "text-red-400" : "text-slate-400"}`}
+                  />
                   <input
-                    id="login-password"
+                    {...register("password")}
                     type="password"
-                    autoComplete="current-password"
                     placeholder="••••••••"
-                    className="w-full pl-12 pr-4 py-5 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-orange-500 focus:ring-[6px] focus:ring-orange-50 outline-none transition-all duration-300 font-semibold text-slate-700 placeholder:text-slate-300"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                    className={`w-full pl-12 pr-5 py-4 bg-slate-50 border rounded-2xl focus:bg-white outline-none transition-all text-slate-700 ${
+                      errors.password
+                        ? "border-red-500 focus:ring-red-100"
+                        : "border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                    }`}
+                    disabled={isLoading}
                   />
                 </div>
-                <button
-                  type="button"
-                  className="text-xs font-bold text-slate-400 hover:text-orange-700 transition-colors mt-2"
-                >
-                  Esqueceu a Senha?
-                </button>
+                {errors.password && (
+                  <p className="text-red-500 text-xs mt-1 font-bold">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-slate-900 hover:bg-orange-600 text-white font-bold py-5 rounded-2xl shadow-2xl shadow-slate-200 hover:shadow-orange-200 active:scale-[0.97] transition-all duration-300 flex items-center justify-center gap-3 group overflow-hidden relative disabled:opacity-70"
+              className="w-full bg-slate-900 hover:bg-orange-600 disabled:bg-slate-400 text-white font-black py-4 rounded-2xl shadow-lg active:scale-[0.985] transition-all duration-200 flex items-center justify-center gap-3 group uppercase tracking-widest"
             >
-              <span className="z-10 flex items-center gap-2 uppercase tracking-widest">
-                {isLoading ? "Entrando..." : "Entrar na Conta"}
-                {!isLoading && (
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
-                )}
-              </span>
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  Entrar na Conta
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
             </button>
           </form>
 
-          <footer className="mt-12 text-center">
-            <p className="text-slate-500 font-medium">
-              Não tem uma conta?
-              <button className="text-orange-600 font-bold hover:underline underline-offset-4 ml-1">
+          <div className="mt-10 text-center">
+            <p className="text-slate-500">
+              Não tem uma conta?{" "}
+              <Link
+                to="/signup"
+                className="text-orange-600 font-bold hover:underline"
+              >
                 Criar conta grátis
-              </button>
+              </Link>
             </p>
-          </footer>
+          </div>
         </div>
       </div>
     </div>
