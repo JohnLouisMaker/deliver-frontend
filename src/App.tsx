@@ -1,23 +1,17 @@
 import { useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-
-// Páginas
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
-// import SignupPage from "./pages/SignupPage"; // Importe sua nova página
-
-// Store e Componentes de Proteção
+import SignupPage from "./pages/SignUpPage";
 import useAuthStore from "./store/authStore";
 
 export default function App() {
   const { isLoading, initializeAuth } = useAuthStore();
 
   useEffect(() => {
-    // Tenta recuperar a sessão (refresh token, etc) ao carregar o app
     initializeAuth();
   }, [initializeAuth]);
 
-  // Enquanto verifica se o usuário está logado, mostra o loader global
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -38,7 +32,7 @@ export default function App() {
 
         {/* --- ROTAS PÚBLICAS --- */}
         <Route path="/login" element={<LoginPage />} />
-        {/* <Route path="/signup" element={<SignupPage />} /> */}
+        <Route path="/signup" element={<SignupPage />} />
 
         {/* --- ROTAS PROTEGIDAS --- */}
         <Route path="/home" element={<HomePage />} />
