@@ -52,7 +52,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.setItem("refresh_token", refreshToken);
 
       // 2. Busca dados do usuário (usando o token que acabou de chegar)
-      const res = await api.get<User>("/auth/auth/me", {
+      const res = await api.get<User>("/auth/me", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
@@ -98,7 +98,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
 
       try {
         const res = await api.post(
-          "/auth/auth/refresh",
+          "/auth/refresh",
           {},
           {
             headers: { Authorization: `Bearer ${storedRefresh}` },
@@ -152,7 +152,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       // Valida o token atual buscando o usuário
-      const res = await api.get<User>("/auth/auth/me", {
+      const res = await api.get<User>("/auth/me", {
         headers: { Authorization: `Bearer ${currentAccess}` },
       });
 

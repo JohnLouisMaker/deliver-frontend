@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignUpPage";
+import ProtectedRoute from "./routes/ProtectedRoute";
 import useAuthStore from "./store/authStore";
 
 export default function App() {
@@ -35,7 +36,14 @@ export default function App() {
         <Route path="/signup" element={<SignupPage />} />
 
         {/* --- ROTAS PROTEGIDAS --- */}
-        <Route path="/home" element={<HomePage />} />
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="*"

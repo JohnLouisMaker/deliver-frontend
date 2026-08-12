@@ -37,7 +37,7 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchComidas() {
       try {
-        const response = await api.get("/cardapio/cardapio");
+        const response = await api.get("/cardapio");
         setComidas(response.data);
       } catch (error) {
         console.error("Erro ao carregar cardápio:", error);
@@ -55,7 +55,7 @@ export default function HomePage() {
     document.body.style.overflow = "hidden";
 
     try {
-      const response = await api.get(`/cardapio/cardapio/${id}`);
+      const response = await api.get(`/cardapio/${id}`);
       setSelectedProduct(response.data);
     } catch (error) {
       console.error("Erro ao buscar detalhes:", error);

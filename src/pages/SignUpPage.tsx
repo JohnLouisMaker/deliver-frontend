@@ -1,6 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
-import { AlertCircle, ArrowRight, Hamburger, Lock, Mail, User } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  Hamburger,
+  Lock,
+  Mail,
+  User,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
@@ -22,7 +29,6 @@ export default function SignupPage() {
     resolver: zodResolver(signupSchema),
   });
 
-
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/home", { replace: true });
@@ -33,7 +39,7 @@ export default function SignupPage() {
     setServerError(null);
 
     try {
-      const response = await api.post("/auth/auth/signup", {
+      const response = await api.post("/auth/signup", {
         nome: data.nome,
         email: data.email,
         senha: data.password,
@@ -42,11 +48,11 @@ export default function SignupPage() {
       const { access_token, refresh_token } = response.data;
 
       await login(access_token, refresh_token);
-
     } catch (err) {
       const axiosError = err as AxiosError<{ detail?: string }>;
       const message =
-        axiosError.response?.data?.detail || "Erro ao criar conta. Tente novamente.";
+        axiosError.response?.data?.detail ||
+        "Erro ao criar conta. Tente novamente.";
       setServerError(message);
     }
   }
@@ -73,12 +79,12 @@ export default function SignupPage() {
             <span className="bg-linear-to-r from-orange-100 to-orange-300 bg-clip-text text-transparent">
               CONTA
             </span>
-            <br />
-            E PEÇA JÁ.
+            <br />E PEÇA JÁ.
           </h2>
           <div className="h-2 w-24 bg-white mb-8 rounded-full" />
           <p className="text-orange-50 text-xl font-medium opacity-80 leading-relaxed">
-            Cadastre-se agora e tenha acesso aos melhores restaurantes da sua cidade com entrega rápida.
+            Cadastre-se agora e tenha acesso aos melhores restaurantes da sua
+            cidade com entrega rápida.
           </p>
         </div>
 
@@ -105,7 +111,9 @@ export default function SignupPage() {
             {serverError && (
               <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-xl flex items-start gap-3">
                 <AlertCircle className="text-red-600 w-5 h-5 shrink-0 mt-0.5" />
-                <p className="text-red-700 text-sm font-medium">{serverError}</p>
+                <p className="text-red-700 text-sm font-medium">
+                  {serverError}
+                </p>
               </div>
             )}
 
