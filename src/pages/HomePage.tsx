@@ -31,9 +31,20 @@ export default function HomePage() {
   const [, setLoadingDetail] = useState(false);
   const [quantidade, setQuantidade] = useState(1);
 
-  const API_URL = import.meta.env.VITE_API_URL;
+  // Garante que API_URL tenha fallback se a env do Vite não estiver setada
+  const API_URL =
+    import.meta.env.VITE_API_URL || "https://seu-backend.onrender.com";
 
-  // 1. Carrega o cardápio
+  // Função auxiliar para montar URLs de imagens estáticas sem duplicação
+  const getImageUrl = (path: string) => {
+    if (!path) return "";
+    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+    const cleanBase = API_URL.replace(/\/$/, "");
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return `${cleanBase}${cleanPath}`;
+  };
+
+  // 1. Carrega o cardápio (Removida a barra do final para bater com a rota do FastAPI)
   useEffect(() => {
     async function fetchComidas() {
       try {
@@ -51,7 +62,7 @@ export default function HomePage() {
   // 2. Lógica do Modal
   const openModalProduct = async (id: number) => {
     setLoadingDetail(true);
-    setQuantidade(1); // Reseta a quantidade
+    setQuantidade(1);
     document.body.style.overflow = "hidden";
 
     try {
@@ -76,7 +87,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      {/* --- NAVBAR --- */}
+      {/* NAVBAR */}
       <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -123,7 +134,7 @@ export default function HomePage() {
       </nav>
 
       <main className="max-w-7xl mx-auto p-6 lg:p-10">
-        {/* --- BANNER DE CUPOM --- */}
+        {/* BANNER DE CUPOM */}
         <section className="relative w-full h-64 bg-orange-600 rounded-[2.5rem] overflow-hidden mb-12 flex items-center px-12 text-white shadow-2xl shadow-orange-200">
           <div className="z-10">
             <span className="inline-block px-4 py-1 bg-orange-500 text-xs font-black rounded-full mb-4 tracking-widest uppercase">
@@ -137,11 +148,10 @@ export default function HomePage() {
               Aproveitar agora
             </button>
           </div>
-          {/* Decoração sutil no fundo */}
           <div className="absolute top-0 right-0 w-1/2 h-full bg-white/5 skew-x-12 translate-x-20" />
         </section>
 
-        {/* --- GRID DE PRODUTOS --- */}
+        {/* GRID DE PRODUTOS */}
         <section>
           <h3 className="text-3xl font-black uppercase mb-8">
             Populares{" "}
@@ -170,7 +180,7 @@ export default function HomePage() {
                 >
                   <div className="relative h-48 w-full bg-slate-50 rounded-2xl overflow-hidden mb-4">
                     <img
-                      src={`${API_URL}${item.imagem_url}`}
+                      src={getImageUrl(item.imagem_url)}
                       alt={item.nome}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
@@ -203,7 +213,7 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* --- MODAL DETALHADO --- */}
+      {/* MODAL DETALHADO */}
       <AnimatePresence>
         {selectedProduct && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -229,7 +239,7 @@ export default function HomePage() {
               <div className="flex flex-col md:flex-row h-full">
                 <div className="w-full md:w-1/2 h-64 md:h-auto">
                   <img
-                    src={`${API_URL}${selectedProduct.imagem_url}`}
+                    src={getImageUrl(selectedProduct.imagem_url)}
                     alt={selectedProduct.nome}
                     className="w-full h-full object-cover"
                   />
@@ -250,7 +260,6 @@ export default function HomePage() {
                   </div>
 
                   <div className="space-y-6">
-                    {/* Contador de Quantidade */}
                     <div className="flex items-center gap-4">
                       <div className="flex items-center bg-slate-100 rounded-2xl p-1">
                         <button
