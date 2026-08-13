@@ -48,7 +48,7 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchComidas() {
       try {
-        const response = await api.get("/cardapio");
+        const response = await api.get("/cardapio/");
         setComidas(response.data);
       } catch (error) {
         console.error("Erro ao carregar cardápio:", error);
