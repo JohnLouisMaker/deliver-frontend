@@ -1,6 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 import { create } from "zustand";
-import api from "../api/api";
+import api, { authApi } from "../api/api";
 
 interface User {
   id: number;
@@ -31,9 +31,6 @@ interface AuthState {
   setError: (error: string | null) => void;
 }
 
-// Variável de controle fora da store para evitar múltiplas chamadas de refresh simultâneas
-let refreshPromise: Promise<string | null> | null = null;
-
 const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   accessToken: null,
@@ -47,26 +44,37 @@ const useAuthStore = create<AuthState>((set, get) => ({
   login: async (accessToken, refreshToken) => {
     set({ isLoading: true, error: null });
     try {
-      // 1. Salva no Storage
+      // 1. Persiste no localStorage
       localStorage.setItem("access_token", accessToken);
       localStorage.setItem("refresh_token", refreshToken);
 
-      // 2. Busca dados do usuário (usando o token que acabou de chegar)
-      const res = await api.get<User>("/auth/me", {
-        headers: { Authorization: `Bearer ${accessToken}` },
+      // 2. Atualiza os estados locais
+      set({
+        accessToken,
+        refreshToken,
+      });
+
+      // 3. Busca o usuário forçando o novo token explicitamente no cabeçalho
+      const res = await authApi.get<User>("/auth/me", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
       set({
         user: res.data,
-        accessToken,
-        refreshToken,
         isAuthenticated: true,
         isLoading: false,
       });
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error("Erro ao buscar usuário no login:", err);
       get().logout();
-      set({ error: "Falha ao carregar perfil do usuário", isLoading: false });
+      set({
+        error:
+          err.response?.data?.message || "Falha ao carregar perfil do usuário",
+        isLoading: false,
+      });
+      throw err;
     }
   },
 
@@ -79,54 +87,43 @@ const useAuthStore = create<AuthState>((set, get) => ({
       refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
+      error: null,
     });
-    // Nota: O redirecionamento deve ser feito pelo componente de rotas (ProtectedRoute)
   },
 
   refreshAccessToken: async () => {
-    // Se já existe um refresh em andamento, retorna a mesma promessa
-    if (refreshPromise) return refreshPromise;
+    const storedRefresh =
+      localStorage.getItem("refresh_token") || get().refreshToken;
 
-    refreshPromise = (async () => {
-      const storedRefresh =
-        localStorage.getItem("refresh_token") || get().refreshToken;
+    if (!storedRefresh) {
+      get().logout();
+      return null;
+    }
 
-      if (!storedRefresh) {
-        get().logout();
-        return null;
-      }
+    try {
+      const res = await authApi.post("/auth/refresh", null, {
+        headers: { Authorization: `Bearer ${storedRefresh}` },
+      });
 
-      try {
-        const res = await api.post(
-          "/auth/refresh",
-          {},
-          {
-            headers: { Authorization: `Bearer ${storedRefresh}` },
-          },
-        );
+      const { access_token, refresh_token: newRefreshToken } = res.data;
 
-        const { access_token, refresh_token } = res.data;
+      const finalRefreshToken = newRefreshToken || storedRefresh;
 
-        localStorage.setItem("access_token", access_token);
-        if (refresh_token) localStorage.setItem("refresh_token", refresh_token);
+      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("refresh_token", finalRefreshToken);
 
-        set({
-          accessToken: access_token,
-          refreshToken: refresh_token || storedRefresh,
-          isAuthenticated: true,
-        });
+      set({
+        accessToken: access_token,
+        refreshToken: finalRefreshToken,
+        isAuthenticated: true,
+      });
 
-        return access_token;
-      } catch (err) {
-        console.error(err);
-        get().logout();
-        return null;
-      } finally {
-        refreshPromise = null;
-      }
-    })();
-
-    return refreshPromise;
+      return access_token;
+    } catch (err) {
+      console.error("Erro no refreshAccessToken:", err);
+      get().logout();
+      return null;
+    }
   },
 
   initializeAuth: async () => {
@@ -147,11 +144,11 @@ const useAuthStore = create<AuthState>((set, get) => ({
 
       if (isExpired || needsRefresh) {
         const newToken = await get().refreshAccessToken();
-        if (!newToken) return; // refreshAccessToken já lida com o logout
+        if (!newToken) return;
         currentAccess = newToken;
       }
 
-      // Valida o token atual buscando o usuário
+      // Valida o token atual e carrega o usuário
       const res = await api.get<User>("/auth/me", {
         headers: { Authorization: `Bearer ${currentAccess}` },
       });
@@ -159,12 +156,12 @@ const useAuthStore = create<AuthState>((set, get) => ({
       set({
         user: res.data,
         accessToken: currentAccess,
-        refreshToken: refresh,
+        refreshToken: localStorage.getItem("refresh_token") || refresh,
         isAuthenticated: true,
         isLoading: false,
       });
     } catch (err) {
-      console.error("Falha na inicialização da auth", err);
+      console.error("Falha na inicialização da auth:", err);
       get().logout();
     }
   },
