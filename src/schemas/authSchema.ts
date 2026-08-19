@@ -30,6 +30,32 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Senha obrigatória"),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .min(1, "O e-mail é obrigatório")
+    .email("E-mail inválido")
+    .max(150, "O e-mail não pode exceder 150 caracteres"),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    code: z
+      .string()
+      .length(6, "O código deve ter 6 dígitos")
+      .regex(/^\d{6}$/, "Apenas números"),
+    password: z
+      .string()
+      .min(8, "A senha deve ter pelo menos 8 caracteres")
+      .max(50, "A senha está muito longa"),
+    confirmPassword: z.string().min(1, "A confirmação é obrigatória"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "As senhas não coincidem",
+    path: ["confirmPassword"],
+  });
 
 export type SignupData = z.infer<typeof signupSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
+export type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordData = z.infer<typeof resetPasswordSchema>;

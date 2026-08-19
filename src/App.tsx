@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
+import RecoverPasswordPage from "./pages/RecoverPasswordPage";
 import SignupPage from "./pages/SignUpPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import useAuthStore from "./store/authStore";
@@ -34,6 +35,7 @@ export default function App() {
         {/* --- ROTAS PÚBLICAS --- */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/recover-password" element={<RecoverPasswordPage />} />
 
         {/* --- ROTAS PROTEGIDAS --- */}
         <Route
