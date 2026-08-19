@@ -34,7 +34,7 @@ export default function RecoverPasswordPage() {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-  /* ── Step 1: Enviar código para o email ── */
+  /* Passo 1: Enviar código para o email */
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
     setServerError(null);
@@ -61,8 +61,8 @@ export default function RecoverPasswordPage() {
     }
   }
 
-  /* ── Step 2: Verificar código ── */
-  function handleVerifyCode(e: React.FormEvent) {
+  /* Passo 2: Verificar código */
+  async function handleVerifyCode(e: React.FormEvent) {
     e.preventDefault();
     setServerError(null);
     setFieldError(null);
@@ -71,10 +71,25 @@ export default function RecoverPasswordPage() {
       setFieldError("O código deve ter exatamente 6 dígitos numéricos");
       return;
     }
-    setStep(3);
+    setIsLoading(true);
+    try {
+      await api.post("/auth/verify-reset-code", {
+        email,
+        code,
+        reset_token: resetToken,
+      });
+      setStep(3);
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ detail?: string }>;
+      setServerError(
+        axiosErr.response?.data?.detail || "Código de verificação inválido",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-  /* ── Step 3: Redefinir senha ── */
+  /* Passo 3: Redefinir senha */
   async function handleResetPassword(e: React.FormEvent) {
     e.preventDefault();
     setServerError(null);
@@ -110,7 +125,7 @@ export default function RecoverPasswordPage() {
     }
   }
 
-  /* ── Helpers de UI ── */
+  /* Ajuda em UI*/
   function renderSteps() {
     return (
       <div className="flex items-center gap-2 mb-8">

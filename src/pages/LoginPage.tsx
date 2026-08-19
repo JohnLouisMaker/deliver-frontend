@@ -14,7 +14,6 @@ export default function LoginPage() {
   const { login, isLoading, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
 
-
   const {
     register,
     handleSubmit,
@@ -22,7 +21,6 @@ export default function LoginPage() {
   } = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
   });
-
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -34,7 +32,6 @@ export default function LoginPage() {
     setServerError(null);
 
     try {
-      
       const response = await api.post("/auth/login", {
         email: data.email,
         senha: data.password,
@@ -42,10 +39,7 @@ export default function LoginPage() {
 
       const { access_token, refresh_token } = response.data;
 
-    
       await login(access_token, refresh_token);
-
-
     } catch (err) {
       const axiosError = err as AxiosError<{ detail?: string }>;
       const message =
@@ -189,16 +183,27 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-10 text-center">
-            <p className="text-slate-500">
-              Não tem uma conta?{" "}
+          <div>
+            <div className="flex mt-10 justify-center items-center gap-1">
+              <p className="text-slate-500">Esqueceu a senha?{""}</p>
               <Link
-                to="/signup"
+                to="/recover-password"
                 className="text-orange-600 font-bold hover:underline"
               >
-                Criar conta grátis
+                Resete aqui
               </Link>
-            </p>
+            </div>
+            <div className="flex justify-center items-center">
+              <p className="text-slate-500">
+                Não tem uma conta?{" "}
+                <Link
+                  to="/signup"
+                  className="text-orange-600 font-bold hover:underline"
+                >
+                  Criar conta grátis
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>
