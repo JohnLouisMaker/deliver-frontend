@@ -166,6 +166,7 @@ export default function RecoverPasswordPage() {
   /* ── Render principal ── */
   return (
     <div className="min-h-screen flex font-sans bg-slate-50">
+      {/* LADO ESQUERDO - DESKTOP */}
       <div className="hidden lg:flex lg:w-3/5 bg-orange-600 flex-col justify-between p-20 relative overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-orange-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob" />
         <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-orange-400 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000" />
@@ -202,8 +203,19 @@ export default function RecoverPasswordPage() {
         </div>
       </div>
 
+      {/* LADO DIREITO - FORMULÁRIO */}
       <div className="w-full lg:w-2/5 bg-white flex items-center justify-center p-8 lg:p-24">
         <div className="w-full max-w-md">
+          {/* LOGO MOBILE */}
+          <div className="flex lg:hidden justify-center items-center gap-4 z-10 mb-8">
+            <div className="p-3 bg-white rounded-2xl shadow-lg border border-slate-100 -rotate-12 hover:rotate-0 transition-transform duration-500">
+              <Hamburger className="text-orange-600 w-8 h-8" />
+            </div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-widest uppercase">
+              Menuu DELIVER<span className="text-orange-600">.</span>
+            </h1>
+          </div>
+
           {success ? (
             <>
               <header className="mb-8 text-center">

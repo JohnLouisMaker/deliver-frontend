@@ -90,6 +90,16 @@ export default function LoginPage() {
       {/* LADO DIREITO - FORMULÁRIO */}
       <div className="w-full lg:w-2/5 bg-white flex items-center justify-center p-8 lg:p-24">
         <div className="w-full max-w-md">
+          {/* Cabeçalho Mobile */}
+<div className="flex lg:hidden justify-center items-center gap-3 z-10 mb-8">
+  <div className="p-2.5 bg-white border border-orange-100 rounded-2xl shadow-lg -rotate-12 hover:rotate-0 transition-transform duration-500">
+    <Hamburger className="text-orange-600 w-7 h-7" />
+  </div>
+  <h1 className="text-2xl font-black text-slate-900 tracking-widest uppercase">
+    Menuu DELIVER<span className="text-orange-600">.</span>
+  </h1>
+</div>
+
           <header className="mb-10 text-center lg:text-left">
             <h3 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
               Bem-vindo de volta
