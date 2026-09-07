@@ -1,12 +1,14 @@
-# 🍔 Deliver Frontend
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-%2320232a.svg?logo=react&logoColor=%2361DAFB)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=fff)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-%2338B2AC.svg?logo=tailwind-css&logoColor=white)
+![React Hook Form](https://img.shields.io/badge/React%20Hook%20Form-EC5990?logo=reacthookform&logoColor=fff)
+
+# Deliver Frontend
 
 Frontend de um aplicativo de delivery de comida, desenvolvido em **React + TypeScript + Vite**, com autenticação JWT (access + refresh token) e consumo de uma API **FastAPI**.
 
-<p align="center">
-  <img src="https://skillicons.dev/icons?i=react,ts,vite,tailwind,nodejs" alt="Ícones da stack: React, TypeScript, Vite, Tailwind CSS, Node.js" />
-</p>
-
-## ✨ Funcionalidades
+## Funcionalidades
 
 - **Autenticação completa**: login, cadastro e recuperação de senha
 - **Sessão persistente**: access token + refresh token com renovação automática (interceptors do Axios)
@@ -14,7 +16,7 @@ Frontend de um aplicativo de delivery de comida, desenvolvido em **React + TypeS
 - **Cardápio dinâmico**: listagem de itens (lanches, pizzas, bebidas, sobremesas) consumidos direto da API
 - **UI moderna**: Tailwind CSS + animações com Framer Motion + ícones Lucide
 
-## 🛠️ Stack
+## Stack
 
 | Categoria                | Tecnologia            |
 | ------------------------- | ---------------------- |
@@ -29,7 +31,7 @@ Frontend de um aplicativo de delivery de comida, desenvolvido em **React + TypeS
 | Ícones                     | Lucide React           |
 | Autenticação               | JWT (jwt-decode)       |
 
-## 📁 Estrutura do projeto
+## Estrutura do projeto
 
 ```
 src/
@@ -44,7 +46,7 @@ src/
 └── main.tsx      # Ponto de entrada
 ```
 
-## 🚀 Começando
+## Começando
 
 ### Pré-requisitos
 
@@ -88,7 +90,7 @@ npm run preview
 npm run lint
 ```
 
-## 🔗 Integração com a API
+## Integração com a API
 
 A aplicação consome um backend FastAPI através das seguintes rotas principais:
 
@@ -101,7 +103,7 @@ A aplicação consome um backend FastAPI através das seguintes rotas principais
 
 A URL base da API é definida pela variável de ambiente `VITE_API_URL`.
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [ ] Implementar carrinho de compras / fluxo de pedido
 - [ ] Reforçar a proteção de autenticação da rota `/home`
