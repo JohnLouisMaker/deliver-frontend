@@ -57,8 +57,8 @@ const useAuthStore = create<AuthState>((set, get) => ({
       // 3. Busca o usuário forçando o novo token explicitamente no cabeçalho
       const res = await authApi.get<User>("/auth/me", {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+                  Authorization: `Bearer ${accessToken}`,
+                },
       });
 
       set({

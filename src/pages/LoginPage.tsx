@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
-import { AlertCircle, ArrowRight, Hamburger, Lock, Mail } from "lucide-react";
+import { AlertCircle, ArrowRight, Lock, Mail, Hamburger } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";

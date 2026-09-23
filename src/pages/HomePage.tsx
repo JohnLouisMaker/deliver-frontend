@@ -1,6 +1,6 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import {
-  Hamburger,
+  Menu,
   LogOut,
   Minus,
   Plus,
@@ -25,15 +25,15 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   // Estados do Modal e Produto
-  const [selectedProduct, setSelectedProduct] = useState<ItemCardapio | null>(
-    null,
-  );
-  const [, setLoadingDetail] = useState(false);
-  const [quantidade, setQuantidade] = useState(1);
+    const [selectedProduct, setSelectedProduct] = useState<ItemCardapio | null>(
+      null,
+    );
+    const [, setLoadingDetail] = useState(false);
+    const [quantidade, setQuantidade] = useState(1);
 
   // Garante que API_URL tenha fallback se a env do Vite não estiver setada
   const API_URL =
-    import.meta.env.VITE_API_URL || "https://seu-backend.onrender.com";
+    import.meta.env.VITE_API_URL || "https://deliver-backend-6ec9.onrender.com";
 
   // Função auxiliar para montar URLs de imagens estáticas sem duplicação
   const getImageUrl = (path: string) => {
@@ -92,7 +92,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-orange-600 rounded-xl shadow-lg shadow-orange-200">
-              <Hamburger className="text-white w-6 h-6" />
+              <Menu className="text-white w-6 h-6" />
             </div>
             <h1 className="text-xl font-black tracking-tighter uppercase">
               Menuu<span className="text-orange-600">.</span>
