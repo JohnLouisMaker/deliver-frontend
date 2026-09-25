@@ -1,6 +1,5 @@
-import { AnimatePresence, motion } from "motion/react";
 import {
-  Menu,
+  Hamburger,
   LogOut,
   Minus,
   Plus,
@@ -9,33 +8,32 @@ import {
   User,
   X,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import api from "../api/api";
 import useAuthStore from "../store/authStore";
+import useCartStore from "../store/cartStore";
 import { type ItemCardapio } from "../types/product";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { addToCart, currentCart } = useCartStore();
 
-  // Estados da API
   const [comidas, setComidas] = useState<ItemCardapio[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados do Modal e Produto
-    const [selectedProduct, setSelectedProduct] = useState<ItemCardapio | null>(
-      null,
-    );
-    const [, setLoadingDetail] = useState(false);
-    const [quantidade, setQuantidade] = useState(1);
+  const [selectedProduct, setSelectedProduct] = useState<ItemCardapio | null>(
+    null,
+  );
+  const [, setLoadingDetail] = useState(false);
+  const [quantidade, setQuantidade] = useState(1);
 
-  // Garante que API_URL tenha fallback se a env do Vite não estiver setada
   const API_URL =
     import.meta.env.VITE_API_URL || "https://deliver-backend-6ec9.onrender.com";
 
-  // Função auxiliar para montar URLs de imagens estáticas sem duplicação
   const getImageUrl = (path: string) => {
     if (!path) return "";
     if (path.startsWith("http://") || path.startsWith("https://")) return path;
@@ -44,7 +42,6 @@ export default function HomePage() {
     return `${cleanBase}${cleanPath}`;
   };
 
-  // 1. Carrega o cardápio (Removida a barra do final para bater com a rota do FastAPI)
   useEffect(() => {
     async function fetchComidas() {
       try {
@@ -92,7 +89,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-orange-600 rounded-xl shadow-lg shadow-orange-200">
-              <Menu className="text-white w-6 h-6" />
+              <Hamburger className="text-white w-6 h-6" />
             </div>
             <h1 className="text-xl font-black tracking-tighter uppercase">
               Menuu<span className="text-orange-600">.</span>
@@ -111,7 +108,14 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             <button className="p-3 bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition-colors relative">
               <ShoppingBag className="w-6 h-6" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-orange-600 rounded-full border-2 border-white" />
+              {currentCart.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                  {currentCart.reduce(
+                    (total, item) => total + item.quantity,
+                    0,
+                  )}
+                </span>
+              )}
             </button>
 
             <div className="hidden sm:flex items-center gap-2 p-1 pr-4 bg-white border border-slate-200 rounded-full">
@@ -290,7 +294,13 @@ export default function HomePage() {
                         <span className="text-orange-600 text-lg mr-1">R$</span>
                         {(selectedProduct.preco * quantidade).toFixed(2)}
                       </span>
-                      <button className="flex-1 bg-orange-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95">
+                      <button
+                        onClick={() => {
+                          addToCart(selectedProduct, quantidade);
+                          closeModal();
+                        }}
+                        className="flex-1 bg-orange-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
+                      >
                         Adicionar
                       </button>
                     </div>

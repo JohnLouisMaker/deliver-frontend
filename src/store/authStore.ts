@@ -57,8 +57,8 @@ const useAuthStore = create<AuthState>((set, get) => ({
       // 3. Busca o usuário forçando o novo token explicitamente no cabeçalho
       const res = await authApi.get<User>("/auth/me", {
         headers: {
-                  Authorization: `Bearer ${accessToken}`,
-                },
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
       set({
@@ -138,7 +138,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const decoded = jwtDecode<JwtPayload>(access);
       const isExpired = decoded.exp * 1000 < Date.now();
-      const needsRefresh = decoded.exp * 1000 < Date.now() + 5 * 60 * 1000; // 5 minutos de margem
+      const needsRefresh = decoded.exp * 1000 < Date.now() + 5 * 60 * 1000;
 
       let currentAccess = access;
 
