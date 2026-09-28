@@ -19,6 +19,7 @@ import { type ItemCardapio } from "../types/product";
 
 export default function HomePage() {
   const navigate = useNavigate();
+
   const { user, logout } = useAuthStore();
   const { addToCart, currentCart } = useCartStore();
 
@@ -28,20 +29,30 @@ export default function HomePage() {
   const [selectedProduct, setSelectedProduct] = useState<ItemCardapio | null>(
     null,
   );
+
   const [, setLoadingDetail] = useState(false);
   const [quantidade, setQuantidade] = useState(1);
+
+  const [cartCurrentOpen, setCartCurrentOpen] = useState(false);
 
   const API_URL =
     import.meta.env.VITE_API_URL || "https://deliver-backend-6ec9.onrender.com";
 
+  /* Monta a URL completa da imagem */
   const getImageUrl = (path: string) => {
     if (!path) return "";
-    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+
+    if (path.startsWith("http://") || path.startsWith("https://")) {
+      return path;
+    }
+
     const cleanBase = API_URL.replace(/\/$/, "");
     const cleanPath = path.startsWith("/") ? path : `/${path}`;
+
     return `${cleanBase}${cleanPath}`;
   };
 
+  /* Buscar os produtos ao carregar a página */
   useEffect(() => {
     async function fetchComidas() {
       try {
@@ -53,13 +64,15 @@ export default function HomePage() {
         setLoading(false);
       }
     }
+
     fetchComidas();
   }, []);
 
-  // 2. Lógica do Modal
+  /* Buscar os detalhes do produto selecionado */
   const openModalProduct = async (id: number) => {
     setLoadingDetail(true);
     setQuantidade(1);
+
     document.body.style.overflow = "hidden";
 
     try {
@@ -72,11 +85,13 @@ export default function HomePage() {
     }
   };
 
+  /* Fechar o modal e liberar a rolagem da página */
   const closeModal = () => {
     setSelectedProduct(null);
     document.body.style.overflow = "auto";
   };
 
+  /* Fazer logout e voltar para a tela de login */
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -84,20 +99,23 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      {/* NAVBAR */}
+      {/* Barra de navegação */}
       <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-orange-600 rounded-xl shadow-lg shadow-orange-200">
               <Hamburger className="text-white w-6 h-6" />
             </div>
+
             <h1 className="text-xl font-black tracking-tighter uppercase">
               Menuu<span className="text-orange-600">.</span>
             </h1>
           </div>
 
+          {/* Campo de busca */}
           <div className="hidden md:flex flex-1 max-w-md mx-10 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+
             <input
               type="text"
               placeholder="O que vamos comer hoje?"
@@ -106,27 +124,113 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="p-3 bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition-colors relative">
-              <ShoppingBag className="w-6 h-6" />
-              {currentCart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                  {currentCart.reduce(
-                    (total, item) => total + item.quantity,
-                    0,
-                  )}
-                </span>
-              )}
-            </button>
+            {/* Carrinho */}
+            <div className="relative">
+              <button
+                className="p-3 bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition-colors relative"
+                onClick={() => setCartCurrentOpen(!cartCurrentOpen)}
+              >
+                <ShoppingBag className="w-6 h-6" />
 
+                {currentCart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                    {currentCart.reduce(
+                      (total, item) => total + item.quantity,
+                      0,
+                    )}
+                  </span>
+                )}
+              </button>
+
+              <AnimatePresence>
+                {cartCurrentOpen && (
+                  <motion.div
+                    initial={{
+                      opacity: 0,
+                      y: -10,
+                      scale: 0.95,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: 10,
+                      scale: 0.95,
+                    }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-3 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 p-5 z-50"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+                      <h3 className="text-lg font-black uppercase">
+                        Seu Carrinho
+                      </h3>
+
+                      <button
+                        onClick={() => setCartCurrentOpen(false)}
+                        className="p-1.5 bg-slate-100 rounded-full hover:bg-orange-600 hover:text-white transition-all"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-3 max-h-60 overflow-y-auto mb-4 pr-1">
+                      {currentCart.length === 0 ? (
+                        <p className="text-slate-400 text-sm text-center py-6">
+                          Seu carrinho está vazio.
+                        </p>
+                      ) : (
+                        currentCart.map((item) => (
+                          <div
+                            key={item.product.id}
+                            className="flex justify-between items-center bg-slate-50 p-2.5 rounded-2xl"
+                          >
+                            <div className="truncate pr-2">
+                              <h4 className="font-bold text-xs truncate">
+                                {item.product.nome}
+                              </h4>
+
+                              <span className="text-[10px] text-slate-400">
+                                Qtd: {item.quantity}
+                              </span>
+                            </div>
+
+                            <span className="font-black text-xs shrink-0">
+                              R${" "}
+                              {(item.product.preco * item.quantity).toFixed(2)}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => setCartCurrentOpen(false)}
+                      className="w-full bg-orange-600 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
+                      disabled={currentCart.length === 0}
+                    >
+                      Finalizar Pedido
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Perfil do usuário */}
             <div className="hidden sm:flex items-center gap-2 p-1 pr-4 bg-white border border-slate-200 rounded-full">
               <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold uppercase">
                 {user?.nome?.charAt(0) || <User className="w-5 h-5" />}
               </div>
+
               <span className="text-sm font-bold text-slate-700">
                 {user?.nome?.split(" ")[0] || "Perfil"}
               </span>
             </div>
 
+            {/* Botão de sair */}
             <button
               onClick={handleLogout}
               className="p-3 bg-slate-100 rounded-2xl hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
@@ -138,24 +242,27 @@ export default function HomePage() {
       </nav>
 
       <main className="max-w-7xl mx-auto p-6 lg:p-10">
-        {/* BANNER DE CUPOM */}
+        {/* Banner promocional */}
         <section className="relative w-full h-64 bg-orange-600 rounded-[2.5rem] overflow-hidden mb-12 flex items-center px-12 text-white shadow-2xl shadow-orange-200">
           <div className="z-10">
             <span className="inline-block px-4 py-1 bg-orange-500 text-xs font-black rounded-full mb-4 tracking-widest uppercase">
               CUPOM: FAMINTO20
             </span>
+
             <h2 className="text-5xl font-black leading-none uppercase mb-4">
               20% OFF NA <br />{" "}
               <span className="text-orange-200">PRIMEIRA COMPRA</span>
             </h2>
+
             <button className="bg-white text-orange-600 font-bold px-8 py-3 rounded-xl hover:scale-105 transition-transform active:scale-95">
               Aproveitar agora
             </button>
           </div>
+
           <div className="absolute top-0 right-0 w-1/2 h-full bg-white/5 skew-x-12 translate-x-20" />
         </section>
 
-        {/* GRID DE PRODUTOS */}
+        {/* Lista de produtos */}
         <section>
           <h3 className="text-3xl font-black uppercase mb-8">
             Populares{" "}
@@ -176,8 +283,7 @@ export default function HomePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {comidas.map((item) => (
-                <motion.div
-                  layoutId={`product-${item.id}`}
+                <div
                   key={item.id}
                   onClick={() => openModalProduct(item.id)}
                   className="group bg-white rounded-4xl p-4 shadow-sm hover:shadow-2xl hover:shadow-orange-100 transition-all duration-500 border border-transparent hover:border-orange-100 cursor-pointer"
@@ -194,6 +300,7 @@ export default function HomePage() {
                     <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest">
                       {item.categoria}
                     </span>
+
                     <h4 className="text-lg font-bold mb-1 truncate">
                       {item.nome}
                     </h4>
@@ -203,36 +310,75 @@ export default function HomePage() {
                         <span className="text-sm font-bold text-orange-600 mr-1">
                           R$
                         </span>
+
                         {item.preco.toFixed(2)}
                       </span>
-                      <div className="bg-slate-900 text-white p-2.5 rounded-xl group-hover:bg-orange-600 transition-colors shadow-lg">
-                        <Plus className="w-5 h-5" />
+
+                      {/* Adicionar ao carrinho */}
+                      <div
+                        className="bg-slate-900 text-white p-2.5 rounded-xl group-active:scale-80 transition-transform group-hover:bg-orange-600 transition-colors shadow-lg"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart(item, 1);
+                        }}
+                      >
+                        <button className="transition-transform">
+                          <Plus className="w-5 h-5" />
+                        </button>
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           )}
         </section>
       </main>
 
-      {/* MODAL DETALHADO */}
+      {/* Fundo do carrinho */}
+      {cartCurrentOpen && (
+        <div
+          className="fixed inset-0 z-30"
+          onClick={() => setCartCurrentOpen(false)}
+        />
+      )}
+
+      {/* Modal de detalhes do produto */}
       <AnimatePresence>
         {selectedProduct && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50">
+            {/* Fundo do modal */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               onClick={closeModal}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm z-0"
             />
 
+            {/* Conteúdo do modal */}
             <motion.div
-              layoutId={`product-${selectedProduct.id}`}
-              className="bg-white w-full max-w-3xl rounded-[3rem] overflow-hidden shadow-2xl relative z-10"
+              initial={{
+                opacity: 0,
+                x: "100%",
+              }}
+              animate={{
+                opacity: 1,
+                x: 0,
+              }}
+              exit={{
+                opacity: 0,
+                x: "100%",
+              }}
+              transition={{
+                duration: 0.15,
+                ease: "easeOut",
+              }}
+              className="absolute right-0 top-0 h-full w-full max-w-2xl bg-white shadow-2xl overflow-y-auto z-10"
+              onClick={(e) => e.stopPropagation()}
             >
+              {/* Botão de fechar */}
               <button
                 onClick={closeModal}
                 className="absolute top-6 right-6 z-20 p-2 bg-white/90 backdrop-blur-md rounded-full shadow-lg hover:bg-orange-600 hover:text-white transition-all"
@@ -240,8 +386,9 @@ export default function HomePage() {
                 <X className="w-6 h-6" />
               </button>
 
-              <div className="flex flex-col md:flex-row h-full">
-                <div className="w-full md:w-1/2 h-64 md:h-auto">
+              <div className="flex flex-col h-full">
+                {/* Imagem do produto */}
+                <div className="flex items-center justify-center h-72 w-full shrink-0 bg-slate-50">
                   <img
                     src={getImageUrl(selectedProduct.imagem_url)}
                     alt={selectedProduct.nome}
@@ -249,20 +396,24 @@ export default function HomePage() {
                   />
                 </div>
 
-                <div className="w-full md:w-1/2 p-10 flex flex-col justify-between bg-white">
+                {/* Informações do produto */}
+                <div className="p-10 flex flex-col justify-between flex-1">
                   <div>
                     <span className="text-orange-600 font-black text-xs uppercase tracking-widest mb-2 block">
                       {selectedProduct.categoria}
                     </span>
+
                     <h2 className="text-4xl font-black leading-tight uppercase mb-4">
                       {selectedProduct.nome}
                     </h2>
+
                     <p className="text-slate-500 text-sm leading-relaxed mb-6">
                       {selectedProduct.descricao ||
                         "Ingredientes selecionados para o melhor sabor."}
                     </p>
                   </div>
 
+                  {/* Quantidade e preço */}
                   <div className="space-y-6">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center bg-slate-100 rounded-2xl p-1">
@@ -274,9 +425,11 @@ export default function HomePage() {
                         >
                           <Minus className="w-5 h-5 text-slate-600" />
                         </button>
+
                         <span className="w-10 text-center font-black text-xl">
                           {quantidade}
                         </span>
+
                         <button
                           onClick={() => setQuantidade(quantidade + 1)}
                           className="p-2 hover:bg-white rounded-xl transition-all"
@@ -284,6 +437,7 @@ export default function HomePage() {
                           <Plus className="w-5 h-5 text-slate-600" />
                         </button>
                       </div>
+
                       <span className="text-slate-400 text-sm font-medium">
                         Unidades
                       </span>
@@ -292,8 +446,10 @@ export default function HomePage() {
                     <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-100">
                       <span className="text-3xl font-black">
                         <span className="text-orange-600 text-lg mr-1">R$</span>
+
                         {(selectedProduct.preco * quantidade).toFixed(2)}
                       </span>
+
                       <button
                         onClick={() => {
                           addToCart(selectedProduct, quantidade);
