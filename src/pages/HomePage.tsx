@@ -151,102 +151,173 @@ export default function HomePage() {
               </button>
 
               <AnimatePresence>
-                {cartCurrentOpen && (
-                  <motion.div
-                    initial={{
-                      opacity: 0,
-                      y: -10,
-                      scale: 0.95,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                      scale: 1,
-                    }}
-                    exit={{
-                      opacity: 0,
-                      y: 10,
-                      scale: 0.95,
-                    }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-3 w-72 sm:w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 p-5 z-50"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
-                      <h3 className="text-lg font-black uppercase">
-                        Seu Carrinho
-                      </h3>
+                              {cartCurrentOpen && (
+                                <motion.div
+                                  key="desktop-cart"
+                                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="hidden lg:block absolute right-0 mt-3 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 p-5 z-50"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+                                    <h3 className="text-lg font-black uppercase">
+                                      Seu Carrinho
+                                    </h3>
+                                    <button
+                                      onClick={() => setCartCurrentOpen(false)}
+                                      className="p-1.5 bg-slate-100 rounded-full hover:bg-orange-600 hover:text-white transition-all"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                  <div className="space-y-3 max-h-60 overflow-y-auto mb-4 pr-1">
+                                    {currentCart.length === 0 ? (
+                                      <p className="text-slate-400 text-sm text-center py-6">
+                                        Seu carrinho está vazio.
+                                      </p>
+                                    ) : (
+                                      currentCart.map((item) => (
+                                        <div
+                                          key={item.product.id}
+                                          className="flex justify-between items-center bg-slate-50 p-2.5 rounded-2xl"
+                                        >
+                                          <div className="truncate pr-2">
+                                            <h4 className="font-bold text-xs truncate">
+                                              {item.product.nome}
+                                            </h4>
+                                            <span className="text-[10px] text-slate-400">
+                                              Qtd: {item.quantity}
+                                            </span>
+                                          </div>
+                                          <span className="font-black text-xs shrink-0">
+                                            R$ {(item.product.preco * item.quantity).toFixed(2)}
+                                          </span>
+                                          <div>
+                                            <button
+                                              className="p-1.5 bg-slate-100 rounded-full hover:bg-red-600 hover:text-white transition-all"
+                                              onClick={() => removeFromCart(item.product.id)}
+                                            >
+                                              <X className="w-4 h-4" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ))
+                                    )}
+                                  </div>
+                                  <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+                                    <h3 className="font-bold text-sm">
+                                      Total: R$
+                                      {currentCart
+                                        .reduce(
+                                          (total, item) =>
+                                            total + item.product.preco * item.quantity,
+                                          0,
+                                        )
+                                        .toFixed(2)}
+                                    </h3>
+                                  </div>
+                                  <button
+                                    onClick={() => setCartCurrentOpen(false)}
+                                    className="w-full bg-orange-600 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
+                                    disabled={currentCart.length === 0}
+                                  >
+                                    Finalizar Pedido
+                                  </button>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
 
-                      <button
-                        onClick={() => setCartCurrentOpen(false)}
-                        className="p-1.5 bg-slate-100 rounded-full hover:bg-orange-600 hover:text-white transition-all"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <div className="space-y-3 max-h-60 overflow-y-auto mb-4 pr-1">
-                      {currentCart.length === 0 ? (
-                        <p className="text-slate-400 text-sm text-center py-6">
-                          Seu carrinho está vazio.
-                        </p>
-                      ) : (
-                        currentCart.map((item) => (
-                          <div
-                            key={item.product.id}
-                            className="flex justify-between items-center bg-slate-50 p-2.5 rounded-2xl"
-                          >
-                            <div className="truncate pr-2">
-                              <h4 className="font-bold text-xs truncate">
-                                {item.product.nome}
-                              </h4>
-
-                              <span className="text-[10px] text-slate-400">
-                                Qtd: {item.quantity}
-                              </span>
-                            </div>
-
-                            <span className="font-black text-xs shrink-0">
-                              R${" "}
-                              {(item.product.preco * item.quantity).toFixed(2)}
-                            </span>
-
-                            <div>
-                              <button
-                                className="p-1.5 bg-slate-100 rounded-full hover:bg-red-600 hover:text-white transition-all"
-                                onClick={() => removeFromCart(item.product.id)}
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-
-                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100 ">
-                      <h3 className="font-bold text-sm ">
-                        Total: R$
-                        {currentCart
-                          .reduce(
-                            (total, item) =>
-                              total + item.product.preco * item.quantity,
-                            0,
-                          )
-                          .toFixed(2)}
-                      </h3>
-                    </div>
-
-                    <button
-                      onClick={() => setCartCurrentOpen(false)}
-                      className="w-full bg-orange-600 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
-                      disabled={currentCart.length === 0}
-                    >
-                      Finalizar Pedido
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                            {/* Mobile bottom sheet */}
+                            <AnimatePresence>
+                              {cartCurrentOpen && (
+                                <motion.div
+                                  key="mobile-cart"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="lg:hidden fixed inset-0 z-50"
+                                  onClick={() => setCartCurrentOpen(false)}
+                                >
+                                  <div className="absolute inset-0 bg-black/40" />
+                                  <motion.div
+                                    initial={{ y: "100%" }}
+                                    animate={{ y: 0 }}
+                                    exit={{ y: "100%" }}
+                                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                                    className="absolute bottom-0 inset-x-0 bg-white rounded-t-3xl p-6 pb-10 max-h-[80vh] overflow-y-auto"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+                                      <h3 className="text-lg font-black uppercase">
+                                        Seu Carrinho
+                                      </h3>
+                                      <button
+                                        onClick={() => setCartCurrentOpen(false)}
+                                        className="p-1.5 bg-slate-100 rounded-full hover:bg-orange-600 hover:text-white transition-all"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                    <div className="space-y-3 max-h-60 overflow-y-auto mb-4 pr-1">
+                                      {currentCart.length === 0 ? (
+                                        <p className="text-slate-400 text-sm text-center py-6">
+                                          Seu carrinho está vazio.
+                                        </p>
+                                      ) : (
+                                        currentCart.map((item) => (
+                                          <div
+                                            key={item.product.id}
+                                            className="flex justify-between items-center bg-slate-50 p-2.5 rounded-2xl"
+                                          >
+                                            <div className="truncate pr-2">
+                                              <h4 className="font-bold text-xs truncate">
+                                                {item.product.nome}
+                                              </h4>
+                                              <span className="text-[10px] text-slate-400">
+                                                Qtd: {item.quantity}
+                                              </span>
+                                            </div>
+                                            <span className="font-black text-xs shrink-0">
+                                              R$ {(item.product.preco * item.quantity).toFixed(2)}
+                                            </span>
+                                            <div>
+                                              <button
+                                                className="p-1.5 bg-slate-100 rounded-full hover:bg-red-600 hover:text-white transition-all"
+                                                onClick={() => removeFromCart(item.product.id)}
+                                              >
+                                                <X className="w-4 h-4" />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ))
+                                      )}
+                                    </div>
+                                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+                                      <h3 className="font-bold text-sm">
+                                        Total: R$
+                                        {currentCart
+                                          .reduce(
+                                            (total, item) =>
+                                              total + item.product.preco * item.quantity,
+                                            0,
+                                          )
+                                          .toFixed(2)}
+                                      </h3>
+                                    </div>
+                                    <button
+                                      onClick={() => setCartCurrentOpen(false)}
+                                      className="w-full bg-orange-600 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
+                                      disabled={currentCart.length === 0}
+                                    >
+                                      Finalizar Pedido
+                                    </button>
+                                  </motion.div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
             </div>
 
             {/* Perfil do usuário */}
