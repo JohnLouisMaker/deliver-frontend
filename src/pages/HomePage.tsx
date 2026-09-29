@@ -21,7 +21,7 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   const { user, logout } = useAuthStore();
-  const { addToCart, currentCart } = useCartStore();
+  const { addToCart, currentCart, removeFromCart, totalItems } = useCartStore();
 
   const [comidas, setComidas] = useState<ItemCardapio[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,25 +34,86 @@ export default function HomePage() {
   const [quantidade, setQuantidade] = useState(1);
 
   const [cartCurrentOpen, setCartCurrentOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  /* Componente interno do carrinho (desktop + mobile) */
+  function CartBody() {
+    return (
+      <>
+        <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+          <h3 className="text-lg font-black uppercase">Seu Carrinho</h3>
+          <button
+            onClick={() => setCartCurrentOpen(false)}
+            className="p-1.5 bg-slate-100 rounded-full hover:bg-orange-600 hover:text-white transition-all"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="space-y-3 max-h-60 overflow-y-auto mb-4 pr-1">
+          {currentCart.length === 0 ? (
+            <p className="text-slate-400 text-sm text-center py-6">
+              Seu carrinho está vazio.
+            </p>
+          ) : (
+            currentCart.map((item) => (
+              <div
+                key={item.product.id}
+                className="flex justify-between items-center bg-slate-50 p-2.5 rounded-2xl"
+              >
+                <div className="truncate pr-2">
+                  <h4 className="font-bold text-xs truncate">
+                    {item.product.nome}
+                  </h4>
+                  <span className="text-[10px] text-slate-400">
+                    Qtd: {item.quantity}
+                  </span>
+                </div>
+                <span className="font-black text-xs shrink-0">
+                  R$ {(item.product.preco * item.quantity).toFixed(2)}
+                </span>
+                <div>
+                  <button
+                    className="p-1.5 bg-slate-100 rounded-full hover:bg-red-600 hover:text-white transition-all"
+                    onClick={() => removeFromCart(item.product.id)}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+          <h3 className="font-bold text-sm">
+            Total: R$
+            {currentCart
+              .reduce(
+                (total, item) => total + item.product.preco * item.quantity,
+                0,
+              )
+              .toFixed(2)}
+          </h3>
+        </div>
+        <button
+          onClick={() => setCartCurrentOpen(false)}
+          className="w-full bg-orange-600 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
+          disabled={currentCart.length === 0}
+        >
+          Finalizar Pedido
+        </button>
+      </>
+    );
+  }
 
   const API_URL =
     import.meta.env.VITE_API_URL || "https://deliver-backend-6ec9.onrender.com";
 
-  /* Monta a URL completa da imagem */
   const getImageUrl = (path: string) => {
-    if (!path) return "";
-
-    if (path.startsWith("http://") || path.startsWith("https://")) {
-      return path;
-    }
-
-    const cleanBase = API_URL.replace(/\/$/, "");
-    const cleanPath = path.startsWith("/") ? path : `/${path}`;
-
-    return `${cleanBase}${cleanPath}`;
+    if (!path || path.startsWith("http://") || path.startsWith("https://"))
+      return path || "";
+    return `${API_URL.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
   };
 
-  /* Buscar os produtos ao carregar a página */
   useEffect(() => {
     async function fetchComidas() {
       try {
@@ -68,7 +129,6 @@ export default function HomePage() {
     fetchComidas();
   }, []);
 
-  /* Buscar os detalhes do produto selecionado */
   const openModalProduct = async (id: number) => {
     setLoadingDetail(true);
     setQuantidade(1);
@@ -85,13 +145,11 @@ export default function HomePage() {
     }
   };
 
-  /* Fechar o modal e liberar a rolagem da página */
   const closeModal = () => {
     setSelectedProduct(null);
     document.body.style.overflow = "auto";
   };
 
-  /* Fazer logout e voltar para a tela de login */
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -112,7 +170,7 @@ export default function HomePage() {
             </h1>
           </div>
 
-          {/* Campo de busca */}
+          {/* Campo de busca — desktop */}
           <div className="hidden md:flex flex-1 max-w-md mx-10 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
 
@@ -123,21 +181,25 @@ export default function HomePage() {
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3">
+            {/* Busca mobile */}
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="p-3 md:hidden bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition-colors"
+            >
+              <Search className="w-6 h-6" />
+            </button>
             {/* Carrinho */}
             <div className="relative">
               <button
-                className="p-3 bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition-colors relative"
+                className="hidden lg:block p-3 bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition-colors relative"
                 onClick={() => setCartCurrentOpen(!cartCurrentOpen)}
               >
                 <ShoppingBag className="w-6 h-6" />
 
                 {currentCart.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                    {currentCart.reduce(
-                      (total, item) => total + item.quantity,
-                      0,
-                    )}
+                    {totalItems()}
                   </span>
                 )}
               </button>
@@ -145,75 +207,15 @@ export default function HomePage() {
               <AnimatePresence>
                 {cartCurrentOpen && (
                   <motion.div
-                    initial={{
-                      opacity: 0,
-                      y: -10,
-                      scale: 0.95,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                      scale: 1,
-                    }}
-                    exit={{
-                      opacity: 0,
-                      y: 10,
-                      scale: 0.95,
-                    }}
+                    key="desktop-cart"
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-3 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 p-5 z-50"
+                    className="hidden lg:block absolute right-0 mt-3 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 p-5 z-50"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
-                      <h3 className="text-lg font-black uppercase">
-                        Seu Carrinho
-                      </h3>
-
-                      <button
-                        onClick={() => setCartCurrentOpen(false)}
-                        className="p-1.5 bg-slate-100 rounded-full hover:bg-orange-600 hover:text-white transition-all"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <div className="space-y-3 max-h-60 overflow-y-auto mb-4 pr-1">
-                      {currentCart.length === 0 ? (
-                        <p className="text-slate-400 text-sm text-center py-6">
-                          Seu carrinho está vazio.
-                        </p>
-                      ) : (
-                        currentCart.map((item) => (
-                          <div
-                            key={item.product.id}
-                            className="flex justify-between items-center bg-slate-50 p-2.5 rounded-2xl"
-                          >
-                            <div className="truncate pr-2">
-                              <h4 className="font-bold text-xs truncate">
-                                {item.product.nome}
-                              </h4>
-
-                              <span className="text-[10px] text-slate-400">
-                                Qtd: {item.quantity}
-                              </span>
-                            </div>
-
-                            <span className="font-black text-xs shrink-0">
-                              R${" "}
-                              {(item.product.preco * item.quantity).toFixed(2)}
-                            </span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-
-                    <button
-                      onClick={() => setCartCurrentOpen(false)}
-                      className="w-full bg-orange-600 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
-                      disabled={currentCart.length === 0}
-                    >
-                      Finalizar Pedido
-                    </button>
+                    <CartBody />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -241,15 +243,30 @@ export default function HomePage() {
         </div>
       </nav>
 
+      {/* Busca mobile expansível */}
+      {searchOpen && (
+        <div className="md:hidden px-4 pb-4 pt-2 bg-white border-b border-slate-100">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="O que vamos comer hoje?"
+              autoFocus
+              className="w-full pl-12 pr-4 py-3 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-orange-500 transition-all"
+            />
+          </div>
+        </div>
+      )}
+
       <main className="max-w-7xl mx-auto p-6 lg:p-10">
         {/* Banner promocional */}
-        <section className="relative w-full h-64 bg-orange-600 rounded-[2.5rem] overflow-hidden mb-12 flex items-center px-12 text-white shadow-2xl shadow-orange-200">
+        <section className="relative w-full h-48 sm:h-64 bg-orange-600 rounded-[2.5rem] overflow-hidden mb-12 flex items-center px-6 sm:px-12 text-white shadow-2xl shadow-orange-200">
           <div className="z-10">
             <span className="inline-block px-4 py-1 bg-orange-500 text-xs font-black rounded-full mb-4 tracking-widest uppercase">
               CUPOM: FAMINTO20
             </span>
 
-            <h2 className="text-5xl font-black leading-none uppercase mb-4">
+            <h2 className="text-3xl sm:text-5xl font-black leading-none uppercase mb-4">
               20% OFF NA <br />{" "}
               <span className="text-orange-200">PRIMEIRA COMPRA</span>
             </h2>
@@ -288,7 +305,7 @@ export default function HomePage() {
                   onClick={() => openModalProduct(item.id)}
                   className="group bg-white rounded-4xl p-4 shadow-sm hover:shadow-2xl hover:shadow-orange-100 transition-all duration-500 border border-transparent hover:border-orange-100 cursor-pointer"
                 >
-                  <div className="relative h-48 w-full bg-slate-50 rounded-2xl overflow-hidden mb-4">
+                  <div className="relative h-36 sm:h-48 w-full bg-slate-50 rounded-2xl overflow-hidden mb-4">
                     <img
                       src={getImageUrl(item.imagem_url)}
                       alt={item.nome}
@@ -335,13 +352,67 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* Fundo do carrinho */}
-      {cartCurrentOpen && (
-        <div
-          className="fixed inset-0 z-30"
-          onClick={() => setCartCurrentOpen(false)}
-        />
-      )}
+      {/* Carrinho mobile: barra fixa no rodapé */}
+      <AnimatePresence>
+        {currentCart.length > 0 && !cartCurrentOpen && (
+          <motion.button
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            onClick={() => setCartCurrentOpen(true)}
+            className="lg:hidden fixed bottom-4 left-4 right-4 z-40 flex items-center justify-between gap-3 rounded-2xl bg-slate-900 px-4 py-3 text-white shadow-2xl"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="relative shrink-0 rounded-xl bg-orange-600 p-2">
+                <ShoppingBag className="h-5 w-5" />
+                <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-900">
+                  {totalItems()}
+                </span>
+              </div>
+              <div className="min-w-0 text-left">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Seu carrinho
+                </p>
+                <p className="truncate text-sm font-black">Ver pedido</p>
+              </div>
+            </div>
+            <span className="shrink-0 font-black">
+              R${" "}
+              {currentCart
+                .reduce(
+                  (total, item) => total + item.product.preco * item.quantity,
+                  0,
+                )
+                .toFixed(2)}
+            </span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Carrinho mobile: painel que sobe do rodapé */}
+      <AnimatePresence>
+        {cartCurrentOpen && (
+          <motion.div
+            className="lg:hidden fixed inset-0 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setCartCurrentOpen(false)}
+          >
+            <div className="absolute inset-0 bg-black/40" />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="absolute bottom-0 inset-x-0 max-h-[80vh] overflow-y-auto rounded-t-3xl bg-white p-6 pb-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CartBody />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Modal de detalhes do produto */}
       <AnimatePresence>
@@ -388,7 +459,7 @@ export default function HomePage() {
 
               <div className="flex flex-col h-full">
                 {/* Imagem do produto */}
-                <div className="flex items-center justify-center h-72 w-full shrink-0 bg-slate-50">
+                <div className="flex items-center justify-center h-48 sm:h-72 w-full shrink-0 bg-slate-50">
                   <img
                     src={getImageUrl(selectedProduct.imagem_url)}
                     alt={selectedProduct.nome}
@@ -397,13 +468,13 @@ export default function HomePage() {
                 </div>
 
                 {/* Informações do produto */}
-                <div className="p-10 flex flex-col justify-between flex-1">
+                <div className="p-5 sm:p-10 flex flex-col justify-between flex-1">
                   <div>
                     <span className="text-orange-600 font-black text-xs uppercase tracking-widest mb-2 block">
                       {selectedProduct.categoria}
                     </span>
 
-                    <h2 className="text-4xl font-black leading-tight uppercase mb-4">
+                    <h2 className="text-2xl sm:text-4xl font-black leading-tight uppercase mb-4">
                       {selectedProduct.nome}
                     </h2>
 
