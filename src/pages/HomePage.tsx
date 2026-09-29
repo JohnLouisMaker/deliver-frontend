@@ -21,7 +21,7 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   const { user, logout } = useAuthStore();
-  const { addToCart, currentCart, removeFromCart } = useCartStore();
+  const { addToCart, currentCart, removeFromCart, totalItems } = useCartStore();
 
   const [comidas, setComidas] = useState<ItemCardapio[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,95 +34,86 @@ export default function HomePage() {
   const [quantidade, setQuantidade] = useState(1);
 
   const [cartCurrentOpen, setCartCurrentOpen] = useState(false);
-    const [searchOpen, setSearchOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
-    /* Componente interno do carrinho (desktop + mobile) */
-    function CartBody() {
-      return (
-        <>
-          <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
-            <h3 className="text-lg font-black uppercase">Seu Carrinho</h3>
-            <button
-              onClick={() => setCartCurrentOpen(false)}
-              className="p-1.5 bg-slate-100 rounded-full hover:bg-orange-600 hover:text-white transition-all"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="space-y-3 max-h-60 overflow-y-auto mb-4 pr-1">
-            {currentCart.length === 0 ? (
-              <p className="text-slate-400 text-sm text-center py-6">
-                Seu carrinho está vazio.
-              </p>
-            ) : (
-              currentCart.map((item) => (
-                <div
-                  key={item.product.id}
-                  className="flex justify-between items-center bg-slate-50 p-2.5 rounded-2xl"
-                >
-                  <div className="truncate pr-2">
-                    <h4 className="font-bold text-xs truncate">
-                      {item.product.nome}
-                    </h4>
-                    <span className="text-[10px] text-slate-400">
-                      Qtd: {item.quantity}
-                    </span>
-                  </div>
-                  <span className="font-black text-xs shrink-0">
-                    R$ {(item.product.preco * item.quantity).toFixed(2)}
-                  </span>
-                  <div>
-                    <button
-                      className="p-1.5 bg-slate-100 rounded-full hover:bg-red-600 hover:text-white transition-all"
-                      onClick={() => removeFromCart(item.product.id)}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-          <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
-            <h3 className="font-bold text-sm">
-              Total: R$
-              {currentCart
-                .reduce(
-                  (total, item) => total + item.product.preco * item.quantity,
-                  0,
-                )
-                .toFixed(2)}
-            </h3>
-          </div>
+  /* Componente interno do carrinho (desktop + mobile) */
+  function CartBody() {
+    return (
+      <>
+        <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+          <h3 className="text-lg font-black uppercase">Seu Carrinho</h3>
           <button
             onClick={() => setCartCurrentOpen(false)}
-            className="w-full bg-orange-600 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
-            disabled={currentCart.length === 0}
+            className="p-1.5 bg-slate-100 rounded-full hover:bg-orange-600 hover:text-white transition-all"
           >
-            Finalizar Pedido
+            <X className="w-4 h-4" />
           </button>
-        </>
-      );
-    }
+        </div>
+        <div className="space-y-3 max-h-60 overflow-y-auto mb-4 pr-1">
+          {currentCart.length === 0 ? (
+            <p className="text-slate-400 text-sm text-center py-6">
+              Seu carrinho está vazio.
+            </p>
+          ) : (
+            currentCart.map((item) => (
+              <div
+                key={item.product.id}
+                className="flex justify-between items-center bg-slate-50 p-2.5 rounded-2xl"
+              >
+                <div className="truncate pr-2">
+                  <h4 className="font-bold text-xs truncate">
+                    {item.product.nome}
+                  </h4>
+                  <span className="text-[10px] text-slate-400">
+                    Qtd: {item.quantity}
+                  </span>
+                </div>
+                <span className="font-black text-xs shrink-0">
+                  R$ {(item.product.preco * item.quantity).toFixed(2)}
+                </span>
+                <div>
+                  <button
+                    className="p-1.5 bg-slate-100 rounded-full hover:bg-red-600 hover:text-white transition-all"
+                    onClick={() => removeFromCart(item.product.id)}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+          <h3 className="font-bold text-sm">
+            Total: R$
+            {currentCart
+              .reduce(
+                (total, item) => total + item.product.preco * item.quantity,
+                0,
+              )
+              .toFixed(2)}
+          </h3>
+        </div>
+        <button
+          onClick={() => setCartCurrentOpen(false)}
+          className="w-full bg-orange-600 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
+          disabled={currentCart.length === 0}
+        >
+          Finalizar Pedido
+        </button>
+      </>
+    );
+  }
 
   const API_URL =
     import.meta.env.VITE_API_URL || "https://deliver-backend-6ec9.onrender.com";
 
-  /* Monta a URL completa da imagem */
   const getImageUrl = (path: string) => {
-    if (!path) return "";
-
-    if (path.startsWith("http://") || path.startsWith("https://")) {
-      return path;
-    }
-
-    const cleanBase = API_URL.replace(/\/$/, "");
-    const cleanPath = path.startsWith("/") ? path : `/${path}`;
-
-    return `${cleanBase}${cleanPath}`;
+    if (!path || path.startsWith("http://") || path.startsWith("https://"))
+      return path || "";
+    return `${API_URL.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
   };
 
-  /* Buscar os produtos ao carregar a página */
   useEffect(() => {
     async function fetchComidas() {
       try {
@@ -138,7 +129,6 @@ export default function HomePage() {
     fetchComidas();
   }, []);
 
-  /* Buscar os detalhes do produto selecionado */
   const openModalProduct = async (id: number) => {
     setLoadingDetail(true);
     setQuantidade(1);
@@ -155,13 +145,11 @@ export default function HomePage() {
     }
   };
 
-  /* Fechar o modal e liberar a rolagem da página */
   const closeModal = () => {
     setSelectedProduct(null);
     document.body.style.overflow = "auto";
   };
 
-  /* Fazer logout e voltar para a tela de login */
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -204,17 +192,14 @@ export default function HomePage() {
             {/* Carrinho */}
             <div className="relative">
               <button
-                className="p-3 bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition-colors relative"
+                className="hidden lg:block p-3 bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition-colors relative"
                 onClick={() => setCartCurrentOpen(!cartCurrentOpen)}
               >
                 <ShoppingBag className="w-6 h-6" />
 
                 {currentCart.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                    {currentCart.reduce(
-                      (total, item) => total + item.quantity,
-                      0,
-                    )}
+                    {totalItems()}
                   </span>
                 )}
               </button>
@@ -231,37 +216,6 @@ export default function HomePage() {
                     onClick={(e) => e.stopPropagation()}
                   >
                     <CartBody />
-                                      </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Mobile bottom sheet */}
-              <AnimatePresence>
-                {cartCurrentOpen && (
-                  <motion.div
-                    key="mobile-cart"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="lg:hidden fixed inset-0 z-50"
-                    onClick={() => setCartCurrentOpen(false)}
-                  >
-                    <div className="absolute inset-0 bg-black/40" />
-                    <motion.div
-                      initial={{ y: "100%" }}
-                      animate={{ y: 0 }}
-                      exit={{ y: "100%" }}
-                      transition={{
-                        type: "spring",
-                        damping: 25,
-                        stiffness: 300,
-                      }}
-                      className="absolute bottom-0 inset-x-0 bg-white rounded-t-3xl p-6 pb-10 max-h-[80vh] overflow-y-auto"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <CartBody />
-                    </motion.div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -398,13 +352,67 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* Fundo do carrinho */}
-      {cartCurrentOpen && (
-        <div
-          className="fixed inset-0 z-30"
-          onClick={() => setCartCurrentOpen(false)}
-        />
-      )}
+      {/* Carrinho mobile: barra fixa no rodapé */}
+      <AnimatePresence>
+        {currentCart.length > 0 && !cartCurrentOpen && (
+          <motion.button
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            onClick={() => setCartCurrentOpen(true)}
+            className="lg:hidden fixed bottom-4 left-4 right-4 z-40 flex items-center justify-between gap-3 rounded-2xl bg-slate-900 px-4 py-3 text-white shadow-2xl"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="relative shrink-0 rounded-xl bg-orange-600 p-2">
+                <ShoppingBag className="h-5 w-5" />
+                <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-900">
+                  {totalItems()}
+                </span>
+              </div>
+              <div className="min-w-0 text-left">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Seu carrinho
+                </p>
+                <p className="truncate text-sm font-black">Ver pedido</p>
+              </div>
+            </div>
+            <span className="shrink-0 font-black">
+              R${" "}
+              {currentCart
+                .reduce(
+                  (total, item) => total + item.product.preco * item.quantity,
+                  0,
+                )
+                .toFixed(2)}
+            </span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Carrinho mobile: painel que sobe do rodapé */}
+      <AnimatePresence>
+        {cartCurrentOpen && (
+          <motion.div
+            className="lg:hidden fixed inset-0 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setCartCurrentOpen(false)}
+          >
+            <div className="absolute inset-0 bg-black/40" />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="absolute bottom-0 inset-x-0 max-h-[80vh] overflow-y-auto rounded-t-3xl bg-white p-6 pb-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CartBody />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Modal de detalhes do produto */}
       <AnimatePresence>

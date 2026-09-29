@@ -11,6 +11,7 @@ interface CartState {
   addToCart: (product: ItemCardapio, quantity: number) => void;
   removeFromCart: (productId: number) => void;
   clearCart: () => void;
+  totalItems: () => number;
 }
 
 const useCartStore = create<CartState>((set, get) => ({
@@ -40,6 +41,9 @@ const useCartStore = create<CartState>((set, get) => ({
     });
   },
   clearCart: () => set({ currentCart: [] }),
+  totalItems: () => {
+    return get().currentCart.reduce((total, item) => total + item.quantity, 0);
+  },
 }));
 
 export default useCartStore;
