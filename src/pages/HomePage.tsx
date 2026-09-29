@@ -21,7 +21,7 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   const { user, logout } = useAuthStore();
-  const { addToCart, currentCart } = useCartStore();
+  const { addToCart, currentCart, removeFromCart } = useCartStore();
 
   const [comidas, setComidas] = useState<ItemCardapio[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +34,7 @@ export default function HomePage() {
   const [quantidade, setQuantidade] = useState(1);
 
   const [cartCurrentOpen, setCartCurrentOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const API_URL =
     import.meta.env.VITE_API_URL || "https://deliver-backend-6ec9.onrender.com";
@@ -112,18 +113,25 @@ export default function HomePage() {
             </h1>
           </div>
 
-          {/* Campo de busca */}
-          <div className="hidden md:flex flex-1 max-w-md mx-10 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+          {/* Campo de busca — desktop */}
+                    <div className="hidden md:flex flex-1 max-w-md mx-10 relative">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
 
-            <input
-              type="text"
-              placeholder="O que vamos comer hoje?"
-              className="w-full pl-12 pr-4 py-3 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-orange-500 transition-all"
-            />
-          </div>
+                      <input
+                        type="text"
+                        placeholder="O que vamos comer hoje?"
+                        className="w-full pl-12 pr-4 py-3 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-orange-500 transition-all"
+                      />
+                    </div>
 
-          <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 sm:gap-3">
+                      {/* Busca mobile */}
+                      <button
+                        onClick={() => setSearchOpen(!searchOpen)}
+                        className="p-3 md:hidden bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition-colors"
+                      >
+                        <Search className="w-6 h-6" />
+                      </button>
             {/* Carrinho */}
             <div className="relative">
               <button
@@ -161,7 +169,7 @@ export default function HomePage() {
                       scale: 0.95,
                     }}
                     transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-3 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 p-5 z-50"
+                    className="absolute right-0 mt-3 w-72 sm:w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 p-5 z-50"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
@@ -202,9 +210,31 @@ export default function HomePage() {
                               R${" "}
                               {(item.product.preco * item.quantity).toFixed(2)}
                             </span>
+
+                            <div>
+                              <button
+                                className="p-1.5 bg-slate-100 rounded-full hover:bg-red-600 hover:text-white transition-all"
+                                onClick={() => removeFromCart(item.product.id)}
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         ))
                       )}
+                    </div>
+
+                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100 ">
+                      <h3 className="font-bold text-sm ">
+                        Total: R$
+                        {currentCart
+                          .reduce(
+                            (total, item) =>
+                              total + item.product.preco * item.quantity,
+                            0,
+                          )
+                          .toFixed(2)}
+                      </h3>
                     </div>
 
                     <button
@@ -241,15 +271,30 @@ export default function HomePage() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto p-6 lg:p-10">
+            {/* Busca mobile expansível */}
+            {searchOpen && (
+              <div className="md:hidden px-4 pb-4 pt-2 bg-white border-b border-slate-100">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="O que vamos comer hoje?"
+                    autoFocus
+                    className="w-full pl-12 pr-4 py-3 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-orange-500 transition-all"
+                  />
+                </div>
+              </div>
+            )}
+
+            <main className="max-w-7xl mx-auto p-6 lg:p-10">
         {/* Banner promocional */}
-        <section className="relative w-full h-64 bg-orange-600 rounded-[2.5rem] overflow-hidden mb-12 flex items-center px-12 text-white shadow-2xl shadow-orange-200">
+        <section className="relative w-full h-48 sm:h-64 bg-orange-600 rounded-[2.5rem] overflow-hidden mb-12 flex items-center px-6 sm:px-12 text-white shadow-2xl shadow-orange-200">
           <div className="z-10">
             <span className="inline-block px-4 py-1 bg-orange-500 text-xs font-black rounded-full mb-4 tracking-widest uppercase">
               CUPOM: FAMINTO20
             </span>
 
-            <h2 className="text-5xl font-black leading-none uppercase mb-4">
+            <h2 className="text-3xl sm:text-5xl font-black leading-none uppercase mb-4">
               20% OFF NA <br />{" "}
               <span className="text-orange-200">PRIMEIRA COMPRA</span>
             </h2>
@@ -288,7 +333,7 @@ export default function HomePage() {
                   onClick={() => openModalProduct(item.id)}
                   className="group bg-white rounded-4xl p-4 shadow-sm hover:shadow-2xl hover:shadow-orange-100 transition-all duration-500 border border-transparent hover:border-orange-100 cursor-pointer"
                 >
-                  <div className="relative h-48 w-full bg-slate-50 rounded-2xl overflow-hidden mb-4">
+                  <div className="relative h-36 sm:h-48 w-full bg-slate-50 rounded-2xl overflow-hidden mb-4">
                     <img
                       src={getImageUrl(item.imagem_url)}
                       alt={item.nome}
@@ -388,7 +433,7 @@ export default function HomePage() {
 
               <div className="flex flex-col h-full">
                 {/* Imagem do produto */}
-                <div className="flex items-center justify-center h-72 w-full shrink-0 bg-slate-50">
+                <div className="flex items-center justify-center h-48 sm:h-72 w-full shrink-0 bg-slate-50">
                   <img
                     src={getImageUrl(selectedProduct.imagem_url)}
                     alt={selectedProduct.nome}
@@ -397,13 +442,13 @@ export default function HomePage() {
                 </div>
 
                 {/* Informações do produto */}
-                <div className="p-10 flex flex-col justify-between flex-1">
+                <div className="p-5 sm:p-10 flex flex-col justify-between flex-1">
                   <div>
                     <span className="text-orange-600 font-black text-xs uppercase tracking-widest mb-2 block">
                       {selectedProduct.categoria}
                     </span>
 
-                    <h2 className="text-4xl font-black leading-tight uppercase mb-4">
+                    <h2 className="text-2xl sm:text-4xl font-black leading-tight uppercase mb-4">
                       {selectedProduct.nome}
                     </h2>
 

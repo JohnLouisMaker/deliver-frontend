@@ -51,7 +51,7 @@ export default function App() {
           path="*"
           element={
             <div className="flex flex-col items-center justify-center h-screen bg-slate-50">
-              <h1 className="font-black text-orange-600 text-6xl mb-4">404</h1>
+              <h1 className="font-black text-orange-600 text-4xl sm:text-6xl mb-4">404</h1>
               <p className="text-slate-600 text-xl font-bold mb-6">
                 OPS! PÁGINA NÃO ENCONTRADA
               </p>

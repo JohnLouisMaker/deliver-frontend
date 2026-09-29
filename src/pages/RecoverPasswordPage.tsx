@@ -204,7 +204,7 @@ export default function RecoverPasswordPage() {
       </div>
 
       {/* LADO DIREITO - FORMULÁRIO */}
-      <div className="w-full lg:w-2/5 bg-white flex items-center justify-center p-8 lg:p-24">
+      <div className="w-full lg:w-2/5 bg-white flex items-center justify-center p-6 sm:p-8 lg:p-24">
         <div className="w-full max-w-md">
           {/* LOGO MOBILE */}
           <div className="flex lg:hidden justify-center items-center gap-4 z-10 mb-8">

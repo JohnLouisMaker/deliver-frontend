@@ -88,7 +88,7 @@ export default function LoginPage() {
       </div>
 
       {/* LADO DIREITO - FORMULÁRIO */}
-      <div className="w-full lg:w-2/5 bg-white flex items-center justify-center p-8 lg:p-24">
+      <div className="w-full lg:w-2/5 bg-white flex items-center justify-center p-6 sm:p-8 lg:p-24">
         <div className="w-full max-w-md">
           {/* Cabeçalho Mobile */}
 <div className="flex lg:hidden justify-center items-center gap-3 z-10 mb-8">
@@ -101,7 +101,7 @@ export default function LoginPage() {
 </div>
 
           <header className="mb-10 text-center lg:text-left">
-            <h3 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
+            <h3 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
               Bem-vindo de volta
             </h3>
             <p className="text-slate-500 text-lg">
