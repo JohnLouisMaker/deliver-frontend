@@ -1,7 +1,10 @@
 import { useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import CheckoutPage from "./pages/CheckoutPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
+import MeusPedidosPage from "./pages/MeusPedidosPage";
+import PedidoSucessoPage from "./pages/PedidoSucessoPage";
 import RecoverPasswordPage from "./pages/RecoverPasswordPage";
 import SignupPage from "./pages/SignUpPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -43,6 +46,33 @@ export default function App() {
           element={
             <ProtectedRoute>
               <HomePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <CheckoutPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/pedido-sucesso"
+          element={
+            <ProtectedRoute>
+              <PedidoSucessoPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/meus-pedidos"
+          element={
+            <ProtectedRoute>
+              <MeusPedidosPage />
             </ProtectedRoute>
           }
         />

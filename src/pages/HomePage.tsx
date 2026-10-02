@@ -95,7 +95,10 @@ export default function HomePage() {
           </h3>
         </div>
         <button
-          onClick={() => setCartCurrentOpen(false)}
+          onClick={() => {
+            navigate("/checkout");
+            setCartCurrentOpen(false);
+          }}
           className="w-full bg-orange-600 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
           disabled={currentCart.length === 0}
         >
@@ -231,6 +234,15 @@ export default function HomePage() {
                 {user?.nome?.split(" ")[0] || "Perfil"}
               </span>
             </div>
+
+            {/* Botão meus pedidos */}
+            <button
+              onClick={() => navigate("/meus-pedidos")}
+              className="p-3 bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-400 hover:text-orange-600 transition-colors"
+              title="Meus Pedidos"
+            >
+              <ShoppingBag className="w-6 h-6" />
+            </button>
 
             {/* Botão de sair */}
             <button
