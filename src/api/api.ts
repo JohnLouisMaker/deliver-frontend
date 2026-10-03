@@ -1,9 +1,15 @@
 import axios from "axios";
 import useAuthStore from "../store/authStore";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://deliver-backend-6ec9.onrender.com";
+
 const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL || "https://deliver-backend-6ec9.onrender.com",
+  baseURL: API_BASE_URL,
+});
+
+export const authApi = axios.create({
+  baseURL: API_BASE_URL,
 });
 
 // --- Interceptor: anexa token de acesso ---
@@ -37,10 +43,13 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    const { refreshToken, logout, setTokens, accessToken } =
-      useAuthStore.getState();
+    const { refreshToken, logout, setTokens } = useAuthStore.getState();
 
-    if (error.response?.status === 401 && refreshToken && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      refreshToken &&
+      !originalRequest._retry
+    ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -54,10 +63,9 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const res = await axios.post(
-          `${api.defaults.baseURL}/auth/refresh`,
-          { refresh_token: refreshToken },
-        );
+        const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
+          refresh_token: refreshToken,
+        });
         const { access_token, refresh_token } = res.data;
         setTokens(access_token, refresh_token);
         processQueue(null, access_token);

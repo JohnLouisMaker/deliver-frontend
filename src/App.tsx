@@ -3,7 +3,6 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import CheckoutPage from "./pages/CheckoutPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
-import MeusPedidosPage from "./pages/MeusPedidosPage";
 import PedidoSucessoPage from "./pages/PedidoSucessoPage";
 import RecoverPasswordPage from "./pages/RecoverPasswordPage";
 import SignupPage from "./pages/SignUpPage";
@@ -69,19 +68,12 @@ export default function App() {
         />
 
         <Route
-          path="/meus-pedidos"
-          element={
-            <ProtectedRoute>
-              <MeusPedidosPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
           path="*"
           element={
             <div className="flex flex-col items-center justify-center h-screen bg-slate-50">
-              <h1 className="font-black text-orange-600 text-4xl sm:text-6xl mb-4">404</h1>
+              <h1 className="font-black text-orange-600 text-4xl sm:text-6xl mb-4">
+                404
+              </h1>
               <p className="text-slate-600 text-xl font-bold mb-6">
                 OPS! PÁGINA NÃO ENCONTRADA
               </p>

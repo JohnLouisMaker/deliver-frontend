@@ -28,6 +28,7 @@ interface AuthState {
   logout: () => void;
   initializeAuth: () => Promise<void>;
   refreshAccessToken: () => Promise<string | null>;
+  setTokens: (accessToken: string, refreshToken: string) => void;
   setError: (error: string | null) => void;
 }
 
@@ -38,6 +39,12 @@ const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   isLoading: true,
   error: null,
+
+  setTokens: (accessToken, refreshToken) => {
+    localStorage.setItem("access_token", accessToken);
+    localStorage.setItem("refresh_token", refreshToken);
+    set({ accessToken, refreshToken });
+  },
 
   setError: (error) => set({ error }),
 
