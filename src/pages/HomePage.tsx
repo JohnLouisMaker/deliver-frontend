@@ -9,7 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import api from "../api/api";
@@ -35,6 +35,23 @@ export default function HomePage() {
 
   const [cartCurrentOpen, setCartCurrentOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const cartRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!cartCurrentOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (cartRef.current && !cartRef.current.contains(event.target as Node)) {
+        setCartCurrentOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [cartCurrentOpen]);
 
   /* Componente interno do carrinho (desktop + mobile) */
   function CartBody() {
@@ -95,7 +112,10 @@ export default function HomePage() {
           </h3>
         </div>
         <button
-          onClick={() => setCartCurrentOpen(false)}
+          onClick={() => {
+            navigate("/checkout");
+            setCartCurrentOpen(false);
+          }}
           className="w-full bg-orange-600 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
           disabled={currentCart.length === 0}
         >
@@ -207,6 +227,7 @@ export default function HomePage() {
               <AnimatePresence>
                 {cartCurrentOpen && (
                   <motion.div
+                    ref={cartRef}
                     key="desktop-cart"
                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -300,10 +321,15 @@ export default function HomePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {comidas.map((item) => (
-                <div
+                <motion.div
                   key={item.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ y: -6, scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
                   onClick={() => openModalProduct(item.id)}
-                  className="group bg-white rounded-4xl p-4 shadow-sm hover:shadow-2xl hover:shadow-orange-100 transition-all duration-500 border border-transparent hover:border-orange-100 cursor-pointer"
+                  className="group bg-white rounded-4xl p-4 shadow-sm hover:shadow-2xl hover:shadow-orange-100 transition-shadow duration-300 border border-transparent hover:border-orange-100 cursor-pointer"
                 >
                   <div className="relative h-36 sm:h-48 w-full bg-slate-50 rounded-2xl overflow-hidden mb-4">
                     <img
@@ -345,7 +371,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
