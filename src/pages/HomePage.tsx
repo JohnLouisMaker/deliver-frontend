@@ -2,8 +2,10 @@ import {
   Hamburger,
   LogOut,
   Minus,
+  Pencil,
   Plus,
   Search,
+  Settings,
   ShoppingBag,
   User,
   X,
@@ -34,8 +36,36 @@ export default function HomePage() {
   const [quantidade, setQuantidade] = useState(1);
 
   const [cartCurrentOpen, setCartCurrentOpen] = useState(false);
+  const [modalUser, setModalUser] = useState(false);
+
   const [searchOpen, setSearchOpen] = useState(false);
+  const userRef = useRef<HTMLDivElement | null>(null);
   const cartRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!modalUser) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        window.matchMedia("(min-width: 1024px)").matches &&
+        userRef.current &&
+        !userRef.current.contains(event.target as Node)
+      ) {
+        setModalUser(false);
+      }
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setModalUser(false);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [modalUser]);
 
   useEffect(() => {
     if (!cartCurrentOpen) return;
@@ -120,6 +150,61 @@ export default function HomePage() {
           disabled={currentCart.length === 0}
         >
           Finalizar Pedido
+        </button>
+      </>
+    );
+  }
+
+  function ProfileBody() {
+    return (
+      <>
+        <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-2">
+          <h3 className="text-lg font-black uppercase">Minha conta</h3>
+          <button
+            type="button"
+            onClick={() => setModalUser(false)}
+            aria-label="Fechar perfil"
+            className="rounded-full bg-slate-100 p-1.5 transition-all hover:bg-orange-600 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="mb-4 flex items-center gap-3 rounded-2xl bg-slate-50 p-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-600 font-bold uppercase text-white">
+            {user?.nome?.charAt(0) || <User className="h-5 w-5" />}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-slate-700">
+              {user?.nome || "Usuário"}
+            </p>
+            <p className="break-all text-xs text-slate-500">{user?.email}</p>
+          </div>
+        </div>
+        <div className="mb-3 space-y-1">
+          <button
+            type="button"
+            disabled
+            className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-slate-500 opacity-75"
+          >
+            <Pencil className="h-4 w-4" />
+            <span className="flex-1">Editar perfil</span>
+          </button>
+          <button
+            type="button"
+            disabled
+            className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-slate-500 opacity-75"
+          >
+            <Settings className="h-4 w-4" />
+            <span className="flex-1">Preferências</span>
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex w-full items-center gap-2 rounded-xl bg-slate-100 px-3 py-2.5 text-sm font-bold text-red-600 transition-colors hover:bg-red-50"
+        >
+          <LogOut className="h-4 w-4" />
+          Sair da conta
         </button>
       </>
     );
@@ -241,28 +326,71 @@ export default function HomePage() {
                 )}
               </AnimatePresence>
             </div>
-
             {/* Perfil do usuário */}
-            <div className="hidden sm:flex items-center gap-2 p-1 pr-4 bg-white border border-slate-200 rounded-full">
-              <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold uppercase">
-                {user?.nome?.charAt(0) || <User className="w-5 h-5" />}
-              </div>
+            <div ref={userRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setModalUser((open) => !open)}
+                aria-expanded={modalUser}
+                aria-haspopup="dialog"
+                aria-controls="profile-modal"
+                className="flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white p-1 sm:pr-4 transition-colors hover:border-orange-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+              >
+                <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold uppercase">
+                  {user?.nome?.charAt(0) || <User className="w-5 h-5" />}
+                </div>
+                <span className="hidden text-sm font-bold text-slate-700 sm:inline">
+                  {user?.nome?.split(" ")[0] || "Perfil"}
+                </span>
+              </button>
 
-              <span className="text-sm font-bold text-slate-700">
-                {user?.nome?.split(" ")[0] || "Perfil"}
-              </span>
+              <AnimatePresence>
+                {modalUser && (
+                  <motion.div
+                    role="dialog"
+                    aria-label="Opções do perfil"
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 z-50 mt-3 hidden w-80 rounded-3xl border border-slate-100 bg-white p-5 shadow-2xl lg:block"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <ProfileBody />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-
-            {/* Botão de sair */}
-            <button
-              onClick={handleLogout}
-              className="p-3 bg-slate-100 rounded-2xl hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
-            >
-              <LogOut className="w-6 h-6" />
-            </button>
           </div>
         </div>
       </nav>
+
+      {/* Perfil mobile: painel que sobe do rodapé como o carrinho */}
+      <AnimatePresence>
+        {modalUser && (
+          <motion.div
+            className="fixed inset-0 z-50 lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setModalUser(false)}
+          >
+            <div className="absolute inset-0 bg-black/40" />
+            <motion.div
+              role="dialog"
+              aria-label="Opções do perfil"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="absolute bottom-0 inset-x-0 max-h-[80vh] overflow-y-auto rounded-t-3xl bg-white p-6 pb-10"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <ProfileBody />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Busca mobile expansível */}
       {searchOpen && (
