@@ -12,7 +12,11 @@ interface CartState {
   removeFromCart: (productId: number) => void;
   clearCart: () => void;
   totalItems: () => number;
+  subtotal: () => number;
 }
+
+export const selectCartSubtotal = (state: CartState) => state.subtotal();
+export const selectCartTotalItems = (state: CartState) => state.totalItems();
 
 const useCartStore = create<CartState>((set, get) => ({
   currentCart: [],
@@ -43,6 +47,12 @@ const useCartStore = create<CartState>((set, get) => ({
   clearCart: () => set({ currentCart: [] }),
   totalItems: () => {
     return get().currentCart.reduce((total, item) => total + item.quantity, 0);
+  },
+  subtotal: () => {
+    return get().currentCart.reduce(
+      (total, item) => total + item.product.preco * item.quantity,
+      0,
+    );
   },
 }));
 

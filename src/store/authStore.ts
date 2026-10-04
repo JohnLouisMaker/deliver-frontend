@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import { jwtDecode } from "jwt-decode";
 import { create } from "zustand";
 import api, { authApi } from "../api/api";
@@ -23,7 +24,6 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
 
-  // Ações
   login: (accessToken: string, refreshToken: string) => Promise<void>;
   logout: () => void;
   initializeAuth: () => Promise<void>;
@@ -51,17 +51,8 @@ const useAuthStore = create<AuthState>((set, get) => ({
   login: async (accessToken, refreshToken) => {
     set({ isLoading: true, error: null });
     try {
-      // 1. Persiste no localStorage
-      localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("refresh_token", refreshToken);
+      get().setTokens(accessToken, refreshToken);
 
-      // 2. Atualiza os estados locais
-      set({
-        accessToken,
-        refreshToken,
-      });
-
-      // 3. Busca o usuário forçando o novo token explicitamente no cabeçalho
       const res = await authApi.get<User>("/auth/me", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -73,12 +64,14 @@ const useAuthStore = create<AuthState>((set, get) => ({
         isAuthenticated: true,
         isLoading: false,
       });
-    } catch (err: any) {
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message?: string }>;
       console.error("Erro ao buscar usuário no login:", err);
       get().logout();
       set({
         error:
-          err.response?.data?.message || "Falha ao carregar perfil do usuário",
+          axiosError.response?.data?.message ||
+          "Falha ao carregar perfil do usuário",
         isLoading: false,
       });
       throw err;
@@ -113,17 +106,10 @@ const useAuthStore = create<AuthState>((set, get) => ({
       });
 
       const { access_token, refresh_token: newRefreshToken } = res.data;
-
       const finalRefreshToken = newRefreshToken || storedRefresh;
 
-      localStorage.setItem("access_token", access_token);
-      localStorage.setItem("refresh_token", finalRefreshToken);
-
-      set({
-        accessToken: access_token,
-        refreshToken: finalRefreshToken,
-        isAuthenticated: true,
-      });
+      get().setTokens(access_token, finalRefreshToken);
+      set({ isAuthenticated: true });
 
       return access_token;
     } catch (err) {
@@ -155,7 +141,6 @@ const useAuthStore = create<AuthState>((set, get) => ({
         currentAccess = newToken;
       }
 
-      // Valida o token atual e carrega o usuário
       const res = await api.get<User>("/auth/me", {
         headers: { Authorization: `Bearer ${currentAccess}` },
       });
