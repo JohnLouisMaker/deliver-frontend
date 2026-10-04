@@ -5,8 +5,9 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import PedidoSucessoPage from "./pages/PedidoSucessoPage";
 import RecoverPasswordPage from "./pages/RecoverPasswordPage";
-import SignupPage from "./pages/SignUpPage";
+import SignUpPage from "./pages/SignUpPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import { ROTAS } from "./routes/paths";
 import useAuthStore from "./store/authStore";
 
 export default function App() {
@@ -32,34 +33,32 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="/" element={<Navigate to={ROTAS.cardapio} replace />} />
 
         {/* --- ROTAS PÚBLICAS --- */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/recover-password" element={<RecoverPasswordPage />} />
+        <Route path={ROTAS.login} element={<LoginPage />} />
+        <Route path={ROTAS.cadastro} element={<SignUpPage />} />
+        <Route path={ROTAS.recuperarSenha} element={<RecoverPasswordPage />} />
 
         {/* --- ROTAS PROTEGIDAS --- */}
         <Route
-          path="/home"
+          path={ROTAS.cardapio}
           element={
             <ProtectedRoute>
               <HomePage />
             </ProtectedRoute>
           }
         />
-
         <Route
-          path="/checkout"
+          path={ROTAS.checkout}
           element={
             <ProtectedRoute>
               <CheckoutPage />
             </ProtectedRoute>
           }
         />
-
         <Route
-          path="/pedido-sucesso"
+          path={ROTAS.pedidoSucesso}
           element={
             <ProtectedRoute>
               <PedidoSucessoPage />

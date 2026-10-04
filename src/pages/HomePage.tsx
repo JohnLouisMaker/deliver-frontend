@@ -1,44 +1,40 @@
-import {
-  Hamburger,
-  LogOut,
-  Minus,
-  Pencil,
-  Plus,
-  Search,
-  Settings,
-  ShoppingBag,
-  User,
-  X,
-} from "lucide-react";
+import { Hamburger, Search, ShoppingBag, User } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import api from "../api/api";
+import CartPanel from "../components/cart/CartPanel";
+import ProductCard from "../components/product/ProductCard";
+import ProductDetailsModal from "../components/product/ProductDetailsModal";
+import ProfilePanel from "../components/profile/ProfilePanel";
+import { ROTAS } from "../routes/paths";
 import useAuthStore from "../store/authStore";
-import useCartStore from "../store/cartStore";
+import useCartStore, {
+  selectCartSubtotal,
+  selectCartTotalItems,
+} from "../store/cartStore";
 import { type ItemCardapio } from "../types/product";
 
 export default function HomePage() {
   const navigate = useNavigate();
 
   const { user, logout } = useAuthStore();
-  const { addToCart, currentCart, removeFromCart, totalItems } = useCartStore();
+  const { addToCart, currentCart } = useCartStore();
+
+  const subtotal = useCartStore(selectCartSubtotal);
+  const totalItems = useCartStore(selectCartTotalItems);
 
   const [comidas, setComidas] = useState<ItemCardapio[]>([]);
-  const [loading, setLoading] = useState(true);
-
   const [selectedProduct, setSelectedProduct] = useState<ItemCardapio | null>(
     null,
   );
 
-  const [, setLoadingDetail] = useState(false);
-  const [quantidade, setQuantidade] = useState(1);
-
+  const [loading, setLoading] = useState(true);
   const [cartCurrentOpen, setCartCurrentOpen] = useState(false);
   const [modalUser, setModalUser] = useState(false);
-
   const [searchOpen, setSearchOpen] = useState(false);
+
   const userRef = useRef<HTMLDivElement | null>(null);
   const cartRef = useRef<HTMLDivElement | null>(null);
 
@@ -83,133 +79,6 @@ export default function HomePage() {
     };
   }, [cartCurrentOpen]);
 
-  /* Componente interno do carrinho (desktop + mobile) */
-  function CartBody() {
-    return (
-      <>
-        <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
-          <h3 className="text-lg font-black uppercase">Seu Carrinho</h3>
-          <button
-            onClick={() => setCartCurrentOpen(false)}
-            className="p-1.5 bg-slate-100 rounded-full hover:bg-orange-600 hover:text-white transition-all"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="space-y-3 max-h-60 overflow-y-auto mb-4 pr-1">
-          {currentCart.length === 0 ? (
-            <p className="text-slate-400 text-sm text-center py-6">
-              Seu carrinho está vazio.
-            </p>
-          ) : (
-            currentCart.map((item) => (
-              <div
-                key={item.product.id}
-                className="flex justify-between items-center bg-slate-50 p-2.5 rounded-2xl"
-              >
-                <div className="truncate pr-2">
-                  <h4 className="font-bold text-xs truncate">
-                    {item.product.nome}
-                  </h4>
-                  <span className="text-[10px] text-slate-400">
-                    Qtd: {item.quantity}
-                  </span>
-                </div>
-                <span className="font-black text-xs shrink-0">
-                  R$ {(item.product.preco * item.quantity).toFixed(2)}
-                </span>
-                <div>
-                  <button
-                    className="p-1.5 bg-slate-100 rounded-full hover:bg-red-600 hover:text-white transition-all"
-                    onClick={() => removeFromCart(item.product.id)}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-        <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
-          <h3 className="font-bold text-sm">
-            Total: R$
-            {currentCart
-              .reduce(
-                (total, item) => total + item.product.preco * item.quantity,
-                0,
-              )
-              .toFixed(2)}
-          </h3>
-        </div>
-        <button
-          onClick={() => {
-            navigate("/checkout");
-            setCartCurrentOpen(false);
-          }}
-          className="w-full bg-orange-600 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
-          disabled={currentCart.length === 0}
-        >
-          Finalizar Pedido
-        </button>
-      </>
-    );
-  }
-
-  function ProfileBody() {
-    return (
-      <>
-        <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-2">
-          <h3 className="text-lg font-black uppercase">Minha conta</h3>
-          <button
-            type="button"
-            onClick={() => setModalUser(false)}
-            aria-label="Fechar perfil"
-            className="rounded-full bg-slate-100 p-1.5 transition-all hover:bg-orange-600 hover:text-white"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="mb-4 flex items-center gap-3 rounded-2xl bg-slate-50 p-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-600 font-bold uppercase text-white">
-            {user?.nome?.charAt(0) || <User className="h-5 w-5" />}
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-slate-700">
-              {user?.nome || "Usuário"}
-            </p>
-            <p className="break-all text-xs text-slate-500">{user?.email}</p>
-          </div>
-        </div>
-        <div className="mb-3 space-y-1">
-          <button
-            type="button"
-            disabled
-            className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-slate-500 opacity-75"
-          >
-            <Pencil className="h-4 w-4" />
-            <span className="flex-1">Editar perfil</span>
-          </button>
-          <button
-            type="button"
-            disabled
-            className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-slate-500 opacity-75"
-          >
-            <Settings className="h-4 w-4" />
-            <span className="flex-1">Preferências</span>
-          </button>
-        </div>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="flex w-full items-center gap-2 rounded-xl bg-slate-100 px-3 py-2.5 text-sm font-bold text-red-600 transition-colors hover:bg-red-50"
-        >
-          <LogOut className="h-4 w-4" />
-          Sair da conta
-        </button>
-      </>
-    );
-  }
-
   const API_URL =
     import.meta.env.VITE_API_URL || "https://deliver-backend-6ec9.onrender.com";
 
@@ -220,7 +89,7 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    async function fetchComidas() {
+    async function carregarCardapio() {
       try {
         const response = await api.get("/cardapio/");
         setComidas(response.data);
@@ -231,13 +100,10 @@ export default function HomePage() {
       }
     }
 
-    fetchComidas();
+    carregarCardapio();
   }, []);
 
-  const openModalProduct = async (id: number) => {
-    setLoadingDetail(true);
-    setQuantidade(1);
-
+  const abrirDetalhesProduto = async (id: number) => {
     document.body.style.overflow = "hidden";
 
     try {
@@ -245,19 +111,18 @@ export default function HomePage() {
       setSelectedProduct(response.data);
     } catch (error) {
       console.error("Erro ao buscar detalhes:", error);
-    } finally {
-      setLoadingDetail(false);
+      document.body.style.overflow = "auto";
     }
   };
 
-  const closeModal = () => {
+  const fecharDetalhesProduto = () => {
     setSelectedProduct(null);
     document.body.style.overflow = "auto";
   };
 
-  const handleLogout = () => {
+  const encerrarSessao = () => {
     logout();
-    navigate("/login");
+    navigate(ROTAS.login);
   };
 
   return (
@@ -304,7 +169,7 @@ export default function HomePage() {
 
                 {currentCart.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                    {totalItems()}
+                    {totalItems}
                   </span>
                 )}
               </button>
@@ -321,7 +186,7 @@ export default function HomePage() {
                     className="hidden lg:block absolute right-0 mt-3 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 p-5 z-50"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <CartBody />
+                    <CartPanel onClose={() => setCartCurrentOpen(false)} />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -356,7 +221,11 @@ export default function HomePage() {
                     className="absolute right-0 z-50 mt-3 hidden w-80 rounded-3xl border border-slate-100 bg-white p-5 shadow-2xl lg:block"
                     onClick={(event) => event.stopPropagation()}
                   >
-                    <ProfileBody />
+                    <ProfilePanel
+                      user={user}
+                      onClose={() => setModalUser(false)}
+                      onLogout={encerrarSessao}
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -365,7 +234,7 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Perfil mobile: painel que sobe do rodapé como o carrinho */}
+      {/* Perfil Mobile */}
       <AnimatePresence>
         {modalUser && (
           <motion.div
@@ -386,13 +255,17 @@ export default function HomePage() {
               className="absolute bottom-0 inset-x-0 max-h-[80vh] overflow-y-auto rounded-t-3xl bg-white p-6 pb-10"
               onClick={(event) => event.stopPropagation()}
             >
-              <ProfileBody />
+              <ProfilePanel
+                user={user}
+                onClose={() => setModalUser(false)}
+                onLogout={encerrarSessao}
+              />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Busca mobile expansível */}
+      {/* Busca Mobile */}
       {searchOpen && (
         <div className="md:hidden px-4 pb-4 pt-2 bg-white border-b border-slate-100">
           <div className="relative">
@@ -449,64 +322,20 @@ export default function HomePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {comidas.map((item) => (
-                <motion.div
+                <ProductCard
                   key={item.id}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -6, scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                  onClick={() => openModalProduct(item.id)}
-                  className="group bg-white rounded-4xl p-4 shadow-sm hover:shadow-2xl hover:shadow-orange-100 transition-shadow duration-300 border border-transparent hover:border-orange-100 cursor-pointer"
-                >
-                  <div className="relative h-36 sm:h-48 w-full bg-slate-50 rounded-2xl overflow-hidden mb-4">
-                    <img
-                      src={getImageUrl(item.imagem_url)}
-                      alt={item.nome}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
-                  </div>
-
-                  <div className="px-2">
-                    <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest">
-                      {item.categoria}
-                    </span>
-
-                    <h4 className="text-lg font-bold mb-1 truncate">
-                      {item.nome}
-                    </h4>
-
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="text-2xl font-black">
-                        <span className="text-sm font-bold text-orange-600 mr-1">
-                          R$
-                        </span>
-
-                        {item.preco.toFixed(2)}
-                      </span>
-
-                      {/* Adicionar ao carrinho */}
-                      <div
-                        className="bg-slate-900 text-white p-2.5 rounded-xl group-active:scale-80 transition-transform group-hover:bg-orange-600 transition-colors shadow-lg"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(item, 1);
-                        }}
-                      >
-                        <button className="transition-transform">
-                          <Plus className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
+                  product={item}
+                  imageUrl={getImageUrl(item.imagem_url)}
+                  onSelect={abrirDetalhesProduto}
+                  onAdd={(product) => addToCart(product, 1)}
+                />
               ))}
             </div>
           )}
         </section>
       </main>
 
-      {/* Carrinho mobile: barra fixa no rodapé */}
+      {/* Carrinho Mobile */}
       <AnimatePresence>
         {currentCart.length > 0 && !cartCurrentOpen && (
           <motion.button
@@ -520,7 +349,7 @@ export default function HomePage() {
               <div className="relative shrink-0 rounded-xl bg-orange-600 p-2">
                 <ShoppingBag className="h-5 w-5" />
                 <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-900">
-                  {totalItems()}
+                  {totalItems}
                 </span>
               </div>
               <div className="min-w-0 text-left">
@@ -531,19 +360,13 @@ export default function HomePage() {
               </div>
             </div>
             <span className="shrink-0 font-black">
-              R${" "}
-              {currentCart
-                .reduce(
-                  (total, item) => total + item.product.preco * item.quantity,
-                  0,
-                )
-                .toFixed(2)}
+              R$ {subtotal.toFixed(2)}
             </span>
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* Carrinho mobile: painel que sobe do rodapé */}
+      {/* Carrinho Mobile Aberto */}
       <AnimatePresence>
         {cartCurrentOpen && (
           <motion.div
@@ -562,7 +385,7 @@ export default function HomePage() {
               className="absolute bottom-0 inset-x-0 max-h-[80vh] overflow-y-auto rounded-t-3xl bg-white p-6 pb-10"
               onClick={(e) => e.stopPropagation()}
             >
-              <CartBody />
+              <CartPanel onClose={() => setCartCurrentOpen(false)} />
             </motion.div>
           </motion.div>
         )}
@@ -571,125 +394,15 @@ export default function HomePage() {
       {/* Modal de detalhes do produto */}
       <AnimatePresence>
         {selectedProduct && (
-          <div className="fixed inset-0 z-50">
-            {/* Fundo do modal */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={closeModal}
-              className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm z-0"
-            />
-
-            {/* Conteúdo do modal */}
-            <motion.div
-              initial={{
-                opacity: 0,
-                x: "100%",
-              }}
-              animate={{
-                opacity: 1,
-                x: 0,
-              }}
-              exit={{
-                opacity: 0,
-                x: "100%",
-              }}
-              transition={{
-                duration: 0.15,
-                ease: "easeOut",
-              }}
-              className="absolute right-0 top-0 h-full w-full max-w-2xl bg-white shadow-2xl overflow-y-auto z-10"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Botão de fechar */}
-              <button
-                onClick={closeModal}
-                className="absolute top-6 right-6 z-20 p-2 bg-white/90 backdrop-blur-md rounded-full shadow-lg hover:bg-orange-600 hover:text-white transition-all"
-              >
-                <X className="w-6 h-6" />
-              </button>
-
-              <div className="flex flex-col h-full">
-                {/* Imagem do produto */}
-                <div className="flex items-center justify-center h-48 sm:h-72 w-full shrink-0 bg-slate-50">
-                  <img
-                    src={getImageUrl(selectedProduct.imagem_url)}
-                    alt={selectedProduct.nome}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                {/* Informações do produto */}
-                <div className="p-5 sm:p-10 flex flex-col justify-between flex-1">
-                  <div>
-                    <span className="text-orange-600 font-black text-xs uppercase tracking-widest mb-2 block">
-                      {selectedProduct.categoria}
-                    </span>
-
-                    <h2 className="text-2xl sm:text-4xl font-black leading-tight uppercase mb-4">
-                      {selectedProduct.nome}
-                    </h2>
-
-                    <p className="text-slate-500 text-sm leading-relaxed mb-6">
-                      {selectedProduct.descricao ||
-                        "Ingredientes selecionados para o melhor sabor."}
-                    </p>
-                  </div>
-
-                  {/* Quantidade e preço */}
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center bg-slate-100 rounded-2xl p-1">
-                        <button
-                          onClick={() =>
-                            setQuantidade(Math.max(1, quantidade - 1))
-                          }
-                          className="p-2 hover:bg-white rounded-xl transition-all"
-                        >
-                          <Minus className="w-5 h-5 text-slate-600" />
-                        </button>
-
-                        <span className="w-10 text-center font-black text-xl">
-                          {quantidade}
-                        </span>
-
-                        <button
-                          onClick={() => setQuantidade(quantidade + 1)}
-                          className="p-2 hover:bg-white rounded-xl transition-all"
-                        >
-                          <Plus className="w-5 h-5 text-slate-600" />
-                        </button>
-                      </div>
-
-                      <span className="text-slate-400 text-sm font-medium">
-                        Unidades
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-100">
-                      <span className="text-3xl font-black">
-                        <span className="text-orange-600 text-lg mr-1">R$</span>
-
-                        {(selectedProduct.preco * quantidade).toFixed(2)}
-                      </span>
-
-                      <button
-                        onClick={() => {
-                          addToCart(selectedProduct, quantidade);
-                          closeModal();
-                        }}
-                        className="flex-1 bg-orange-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
-                      >
-                        Adicionar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+          <ProductDetailsModal
+            product={selectedProduct}
+            imageUrl={getImageUrl(selectedProduct.imagem_url)}
+            onClose={fecharDetalhesProduto}
+            onAdd={(product, quantity) => {
+              addToCart(product, quantity);
+              fecharDetalhesProduto();
+            }}
+          />
         )}
       </AnimatePresence>
     </div>

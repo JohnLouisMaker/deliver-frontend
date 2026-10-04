@@ -1,5 +1,6 @@
 import { CheckCircle, Home } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { ROTAS } from "../routes/paths";
 
 export default function PedidoSucessoPage() {
   const navigate = useNavigate();
@@ -14,7 +15,9 @@ export default function PedidoSucessoPage() {
         </div>
 
         <div>
-          <h1 className="text-xl font-black text-slate-800 mb-1">Pedido realizado!</h1>
+          <h1 className="text-xl font-black text-slate-800 mb-1">
+            Pedido realizado!
+          </h1>
           <p className="text-slate-500 text-sm">
             Seu pedido foi enviado para a cozinha.
           </p>
@@ -28,13 +31,7 @@ export default function PedidoSucessoPage() {
 
         <div className="space-y-3">
           <button
-            onClick={() => navigate("/meus-pedidos")}
-            className="w-full bg-orange-600 text-white py-3 rounded-2xl font-bold text-sm hover:bg-orange-700 transition-all active:scale-[0.98]"
-          >
-            Acompanhar Pedido
-          </button>
-          <button
-            onClick={() => navigate("/home")}
+            onClick={() => navigate(ROTAS.cardapio)}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm text-slate-600 hover:bg-slate-100 transition-all"
           >
             <Home className="w-4 h-4" />

@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import {
   ArrowLeft,
   Banknote,
@@ -14,7 +15,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import api, { type FinalizarPedidoData, type FormaPagamento } from "../api/api";
-import useCartStore from "../store/cartStore";
+import { ROTAS } from "../routes/paths";
+import useCartStore, { selectCartSubtotal } from "../store/cartStore";
 
 const formasPagamento: {
   value: FormaPagamento;
@@ -47,6 +49,7 @@ const formasPagamento: {
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { currentCart, clearCart } = useCartStore();
+  const total = useCartStore(selectCartSubtotal);
 
   const [endereco, setEndereco] = useState("");
   const [pagamento, setPagamento] = useState<FormaPagamento | "">("");
@@ -55,11 +58,6 @@ export default function CheckoutPage() {
   const [telefone, setTelefone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const total = currentCart.reduce(
-    (s, i) => s + i.product.preco * i.quantity,
-    0,
-  );
 
   if (currentCart.length === 0) {
     return (
@@ -70,7 +68,7 @@ export default function CheckoutPage() {
         </h2>
         <p className="text-slate-500 mb-6">Adicione itens antes de finalizar</p>
         <button
-          onClick={() => navigate("/home")}
+          onClick={() => navigate(ROTAS.cardapio)}
           className="bg-orange-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-orange-700 transition-all"
         >
           Ver Cardápio
@@ -79,7 +77,7 @@ export default function CheckoutPage() {
     );
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function finalizarPedido(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
@@ -118,10 +116,11 @@ export default function CheckoutPage() {
       await api.post(`/pedidos/finalizar/${pedido.id}`, body);
 
       clearCart();
-      navigate("/pedido-sucesso", { state: { pedidoId: pedido.id } });
-    } catch (err: any) {
+      navigate(ROTAS.pedidoSucesso, { state: { pedidoId: pedido.id } });
+    } catch (err) {
+      const axiosError = err as AxiosError<{ detail?: string }>;
       setError(
-        err.response?.data?.detail ||
+        axiosError.response?.data?.detail ||
           "Erro ao finalizar pedido. Tente novamente.",
       );
     } finally {
@@ -140,7 +139,7 @@ export default function CheckoutPage() {
       <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center gap-3">
           <button
-            onClick={() => navigate("/home")}
+            onClick={() => navigate(ROTAS.cardapio)}
             className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-slate-600" />
@@ -151,7 +150,7 @@ export default function CheckoutPage() {
 
       <main className="max-w-6xl mx-auto p-4 sm:p-6 space-y-4 lg:h-[calc(100dvh-72px)] lg:overflow-hidden">
         <form
-          onSubmit={handleSubmit}
+          onSubmit={finalizarPedido}
           className="space-y-4 lg:grid lg:h-full lg:grid-cols-2 lg:grid-rows-[auto_auto_auto_auto_auto] lg:gap-x-6 lg:gap-y-3 lg:space-y-0"
         >
           <motion.section
