@@ -66,16 +66,19 @@ export default function HomePage() {
   useEffect(() => {
     if (!cartCurrentOpen) return;
 
-    const handleClickOutside = (event: MouseEvent) => {
-      if (cartRef.current && !cartRef.current.contains(event.target as Node)) {
+    const handleOutsidePointerDown = (event: PointerEvent) => {
+      if (
+        window.matchMedia("(min-width: 1024px)").matches &&
+        cartRef.current &&
+        !cartRef.current.contains(event.target as Node)
+      ) {
         setCartCurrentOpen(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-
+    document.addEventListener("pointerdown", handleOutsidePointerDown);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("pointerdown", handleOutsidePointerDown);
     };
   }, [cartCurrentOpen]);
 
@@ -160,7 +163,7 @@ export default function HomePage() {
               <Search className="w-6 h-6" />
             </button>
             {/* Carrinho */}
-            <div className="relative">
+            <div ref={cartRef} className="relative">
               <button
                 className="hidden lg:block p-3 bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition-colors relative"
                 onClick={() => setCartCurrentOpen(!cartCurrentOpen)}
@@ -177,14 +180,12 @@ export default function HomePage() {
               <AnimatePresence>
                 {cartCurrentOpen && (
                   <motion.div
-                    ref={cartRef}
                     key="desktop-cart"
                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
                     className="hidden lg:block absolute right-0 mt-3 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 p-5 z-50"
-                    onClick={(e) => e.stopPropagation()}
                   >
                     <CartPanel onClose={() => setCartCurrentOpen(false)} />
                   </motion.div>

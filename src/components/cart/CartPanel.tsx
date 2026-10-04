@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ROTAS } from "../../routes/paths";
 import useCartStore, { selectCartSubtotal } from "../../store/cartStore";
 
@@ -8,14 +8,8 @@ interface CartPanelProps {
 }
 
 export default function CartPanel({ onClose }: CartPanelProps) {
-  const navigate = useNavigate();
   const { currentCart, removeFromCart } = useCartStore();
   const subtotal = useCartStore(selectCartSubtotal);
-
-  const irParaCheckout = () => {
-    onClose();
-    navigate(ROTAS.checkout);
-  };
 
   return (
     <>
@@ -69,13 +63,13 @@ export default function CartPanel({ onClose }: CartPanelProps) {
       </div>
 
       {currentCart.length > 0 ? (
-        <button
-          type="button"
-          onClick={irParaCheckout}
-          className="w-full z-10 bg-orange-600 text-white py-3 rounded-2xl font-bold text-sm hover:bg-orange-700 transition-all active:scale-[0.98]"
+        <Link
+          to={ROTAS.checkout}
+          onClick={onClose}
+          className="block w-full z-10 bg-orange-600 text-center text-white py-3 rounded-2xl font-bold text-sm hover:bg-orange-700 transition-all active:scale-[0.98]"
         >
           Finalizar Pedido
-        </button>
+        </Link>
       ) : (
         <button
           type="button"
