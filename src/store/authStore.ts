@@ -3,7 +3,7 @@ import { jwtDecode } from "jwt-decode";
 import { create } from "zustand";
 import api, { authApi } from "../api/api";
 
-interface User {
+export interface User {
   id: number;
   nome: string;
   email: string;
@@ -29,6 +29,7 @@ interface AuthState {
   initializeAuth: () => Promise<void>;
   refreshAccessToken: () => Promise<string | null>;
   setTokens: (accessToken: string, refreshToken: string) => void;
+  setUser: (user: User) => void;
   setError: (error: string | null) => void;
 }
 
@@ -47,6 +48,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   setError: (error) => set({ error }),
+  setUser: (user) => set({ user }),
 
   login: async (accessToken, refreshToken) => {
     set({ isLoading: true, error: null });

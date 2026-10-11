@@ -1,7 +1,7 @@
 import { AxiosError } from "axios";
 import { AlertCircle, ArrowRight, Hamburger, Lock, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import api from "../api/api";
 import AuthSidebar from "../components/auth/AuthSidebar";
@@ -12,16 +12,12 @@ export default function LoginPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const { login, isLoading, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
-  const location = useLocation();
-  const returnTo =
-    (location.state as { from?: { pathname?: string } } | null)?.from
-      ?.pathname || ROTAS.cardapio;
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(returnTo, { replace: true });
+      navigate(ROTAS.cardapio, { replace: true });
     }
-  }, [isAuthenticated, navigate, returnTo]);
+  }, [isAuthenticated, navigate]);
 
   async function entrarNaConta(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
