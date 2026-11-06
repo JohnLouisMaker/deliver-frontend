@@ -10,7 +10,7 @@ import ProductCard from "../components/product/ProductCard";
 import ProductDetailsModal from "../components/product/ProductDetailsModal";
 import ProfilePanel from "../components/profile/ProfilePanel";
 
-import SiteFooter from "../components/layout/SiteFooter";
+import SiteFooter from "../components/footer/SiteFooter";
 
 import { ROTAS } from "../routes/paths";
 import useAuthStore from "../store/authStore";

@@ -15,7 +15,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import api from "../api/api";
-import SiteFooter from "../components/layout/SiteFooter";
+import SiteFooter from "../components/footer/SiteFooter";
 import { ROTAS } from "../routes/paths";
 import useAuthStore, { type User } from "../store/authStore";
 
