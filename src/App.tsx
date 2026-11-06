@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import CheckoutPage from "./pages/CheckoutPage";
+import EditProfilePage from "./pages/EditProfilePage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import PedidoSucessoPage from "./pages/PedidoSucessoPage";
@@ -62,6 +63,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <PedidoSucessoPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROTAS.editarPerfil}
+          element={
+            <ProtectedRoute>
+              <EditProfilePage />
             </ProtectedRoute>
           }
         />

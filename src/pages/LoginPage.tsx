@@ -2,20 +2,44 @@ import { AxiosError } from "axios";
 import { AlertCircle, ArrowRight, Hamburger, Lock, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import type { Location } from "react-router-dom";
 
 import api from "../api/api";
 import AuthSidebar from "../components/auth/AuthSidebar";
 import { ROTAS } from "../routes/paths";
 import useAuthStore from "../store/authStore";
 
+const ROTA_PADRAO = ROTAS.cardapio;
+
+/**
+ * Aceita apenas caminhos internos (começando por "/"), bloqueando
+ * protocolos, URLs absolutas e caminhos protocol-relative ("//").
+ */
+function sanitizarReturnTo(candidato: unknown): string | null {
+  if (typeof candidato !== "string" || candidato.length === 0) return null;
+  if (!candidato.startsWith("/")) return null;
+  if (candidato.startsWith("//") || candidato.startsWith("/\\")) return null;
+  return candidato;
+}
+
+function resolverReturnTo(
+  location: Location,
+  searchParams: URLSearchParams
+): string {
+  return (
+    sanitizarReturnTo(searchParams.get("returnTo")) ??
+    sanitizarReturnTo(location.state?.from?.pathname) ??
+    ROTA_PADRAO
+  );
+}
+
 export default function LoginPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const { login, isLoading, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
-  const returnTo =
-    (location.state as { from?: { pathname?: string } } | null)?.from
-      ?.pathname || ROTAS.cardapio;
+
+  const returnTo = resolverReturnTo(location, new URLSearchParams(location.search));
 
   useEffect(() => {
     if (isAuthenticated) {

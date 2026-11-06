@@ -4,10 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import api from "../api/api";
+
 import CartPanel from "../components/cart/CartPanel";
 import ProductCard from "../components/product/ProductCard";
 import ProductDetailsModal from "../components/product/ProductDetailsModal";
 import ProfilePanel from "../components/profile/ProfilePanel";
+
+import SiteFooter from "../components/footer/SiteFooter";
+
 import { ROTAS } from "../routes/paths";
 import useAuthStore from "../store/authStore";
 import useCartStore, {
@@ -129,7 +133,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-900">
       {/* Barra de navegação */}
       <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -225,6 +229,10 @@ export default function HomePage() {
                     <ProfilePanel
                       user={user}
                       onClose={() => setModalUser(false)}
+                      onEdit={() => {
+                        setModalUser(false);
+                        navigate(ROTAS.editarPerfil);
+                      }}
                       onLogout={encerrarSessao}
                     />
                   </motion.div>
@@ -259,6 +267,10 @@ export default function HomePage() {
               <ProfilePanel
                 user={user}
                 onClose={() => setModalUser(false)}
+                onEdit={() => {
+                  setModalUser(false);
+                  navigate(ROTAS.editarPerfil);
+                }}
                 onLogout={encerrarSessao}
               />
             </motion.div>
@@ -281,7 +293,7 @@ export default function HomePage() {
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto p-6 lg:p-10">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-6 pt-6 pb-10 lg:px-10 lg:pt-10">
         {/* Banner promocional */}
         <section className="relative w-full h-48 sm:h-64 bg-orange-600 rounded-[2.5rem] overflow-hidden mb-12 flex items-center px-6 sm:px-12 text-white shadow-2xl shadow-orange-200">
           <div className="z-10">
@@ -406,6 +418,7 @@ export default function HomePage() {
           />
         )}
       </AnimatePresence>
+      <SiteFooter />
     </div>
   );
 }
