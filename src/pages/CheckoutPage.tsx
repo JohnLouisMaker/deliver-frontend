@@ -14,7 +14,11 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import api, { type FinalizarPedidoData, type FormaPagamento } from "../api/api";
+import api, {
+  type CheckoutResponse,
+  type CriarPedidoRequest,
+  type FormaPagamento,
+} from "../api/api";
 import { ROTAS } from "../routes/paths";
 import useCartStore, { selectCartSubtotal } from "../store/cartStore";
 
@@ -64,7 +68,7 @@ export default function CheckoutPage() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
         <ShoppingBag className="w-16 h-16 text-slate-300 mb-4" />
         <h2 className="text-xl font-black text-slate-700 mb-2">
-          Carrinho vazio
+          Pedido vazio
         </h2>
         <p className="text-slate-500 mb-6">Adicione itens antes de finalizar</p>
         <button
@@ -91,32 +95,31 @@ export default function CheckoutPage() {
 
     setLoading(true);
     try {
-      // 1. Criar pedido
-      const { data: pedido } = await api.post("/pedidos/criar_pedido");
-
-      // 2. Adicionar itens
-      for (const item of currentCart) {
-        await api.post(`/pedidos/adicionar_item/${pedido.id}`, {
-          item_id: item.product.id,
+      // Requisição única de checkout (contrato: POST /pedidos).
+      // Sem campo de preço no payload: caso de negócio já calculado no backend.
+      const corpo: CriarPedidoRequest = {
+        itens: currentCart.map((item) => ({
+          item_cardapio_id: item.product.id,
           quantidade: item.quantity,
-        });
-      }
-
-      // 3. Finalizar com dados de checkout
-      const body: FinalizarPedidoData = {
+          ...(item.tamanho ? { tamanho: item.tamanho } : {}),
+        })),
         endereco_entrega: endereco.trim(),
         forma_pagamento: pagamento,
-        observacao: observacao.trim() || undefined,
         telefone_contato: telefone.trim(),
       };
       if (pagamento === "DINHEIRO") {
-        body.troco_para = parseFloat(troco.replace(",", "."));
+        corpo.troco_para = parseFloat(troco.replace(",", "."));
+      }
+      if (observacao.trim()) {
+        corpo.observacao = observacao.trim();
       }
 
-      await api.post(`/pedidos/finalizar/${pedido.id}`, body);
+      const response = await api.post<CheckoutResponse>("/pedidos", corpo);
+      const pedidoId = response.data.pedido.id;
 
+      // Carrinho só é limpo após sucesso: em erro, os itens são preservados.
       clearCart();
-      navigate(ROTAS.pedidoSucesso, { state: { pedidoId: pedido.id } });
+      navigate(ROTAS.pedidoSucesso, { state: { pedidoId } });
     } catch (err) {
       const axiosError = err as AxiosError<{ detail?: string }>;
       setError(
@@ -165,11 +168,16 @@ export default function CheckoutPage() {
             <div className="max-h-28 space-y-2 overflow-y-auto pr-1">
               {currentCart.map((item) => (
                 <div
-                  key={item.product.id}
+                  key={`${item.product.id}:${item.tamanho ?? ""}`}
                   className="flex justify-between text-sm gap-3"
                 >
                   <span className="text-slate-700">
                     {item.quantity}x {item.product.nome}
+                    {item.tamanho && (
+                      <span className="text-slate-400 font-bold ml-1">
+                        ({item.tamanho})
+                      </span>
+                    )}
                   </span>
                   <span className="font-bold whitespace-nowrap">
                     R$ {(item.product.preco * item.quantity).toFixed(2)}
@@ -178,7 +186,12 @@ export default function CheckoutPage() {
               ))}
             </div>
             <div className="mt-3 pt-3 border-t border-slate-100 flex justify-between font-black text-base">
-              <span>Total</span>
+              <span>
+                Total
+                <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                  Informativo — recalculado pelo backend
+                </span>
+              </span>
               <span className="text-orange-600">R$ {total.toFixed(2)}</span>
             </div>
           </motion.section>

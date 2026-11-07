@@ -63,9 +63,14 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
-          refresh_token: refreshToken,
-        });
+        // Refresh via header (contrato): o refresh token NÃO vai no corpo.
+        const res = await axios.post(
+          `${api.defaults.baseURL}/auth/refresh`,
+          undefined,
+          {
+            headers: { Authorization: `Bearer ${refreshToken}` },
+          },
+        );
         const { access_token, refresh_token } = res.data;
         setTokens(access_token, refresh_token);
         processQueue(null, access_token);
@@ -86,7 +91,8 @@ api.interceptors.response.use(
 
 export default api;
 
-// --- Tipos de Pedido ---
+// --- Tipos de Checkout (contrato: docs/checkout-api.md) ---
+
 export type FormaPagamento =
   | "DINHEIRO"
   | "CARTAO_CREDITO"
@@ -94,33 +100,42 @@ export type FormaPagamento =
   | "PIX"
   | "VALE_ALIMENTACAO";
 
-export interface FinalizarPedidoData {
+export type TamanhoPedido = "pequena" | "media" | "grande";
+
+export type StatusPedido = "PENDENTE" | "FINALIZADO" | "CANCELADO";
+
+/** Item do corpo do checkout. `tamanho` obrigatório só para pizzas. */
+export interface ItemCheckoutRequest {
+  item_cardapio_id: number;
+  quantidade: number;
+  tamanho?: TamanhoPedido;
+}
+
+export interface CriarPedidoRequest {
+  itens: ItemCheckoutRequest[];
   endereco_entrega: string;
   forma_pagamento: FormaPagamento;
+  telefone_contato: string;
+  /** Obrigatório apenas para DINHEIRO; ignorado nas demais formas. */
   troco_para?: number;
   observacao?: string;
-  telefone_contato?: string;
 }
 
 export interface ItemPedidoResponse {
-  id: number;
-  item_id: number;
+  item_cardapio_id: number;
+  nome_snapshot: string;
+  tamanho: TamanhoPedido | null;
   quantidade: number;
-  sabor: string;
-  tamanho: string;
   preco_unitario: number;
 }
 
 export interface PedidoResponse {
   id: number;
-  usuario_id: number;
-  status: "PENDENTE" | "FINALIZADO" | "CANCELADO";
-  preco: number;
-  endereco_entrega: string | null;
-  forma_pagamento: string | null;
-  troco_para: number | null;
-  observacao: string | null;
-  telefone_contato: string | null;
-  created_at: string | null;
+  status: StatusPedido;
   itens: ItemPedidoResponse[];
+  total: number;
+}
+
+export interface CheckoutResponse {
+  pedido: PedidoResponse;
 }
