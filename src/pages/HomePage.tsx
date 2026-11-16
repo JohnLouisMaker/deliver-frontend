@@ -374,9 +374,12 @@ export default function HomePage() {
                 <p className="truncate text-sm font-black">Ver pedido</p>
               </div>
             </div>
-            <span className="shrink-0 font-black">
-              R$ {subtotal.toFixed(2)}
-            </span>
+            <div className="shrink-0 text-right">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                {totalItems} {totalItems === 1 ? "item" : "itens"}
+              </p>
+              <span className="font-black">R$ {subtotal.toFixed(2)}</span>
+            </div>
           </motion.button>
         )}
       </AnimatePresence>

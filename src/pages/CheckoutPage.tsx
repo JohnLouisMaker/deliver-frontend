@@ -21,6 +21,7 @@ import api, {
 } from "../api/api";
 import { ROTAS } from "../routes/paths";
 import useCartStore, { selectCartSubtotal } from "../store/cartStore";
+import { precoNoCarrinho, ROTULOS_TAMANHO } from "../types/product";
 
 const formasPagamento: {
   value: FormaPagamento;
@@ -49,6 +50,24 @@ const formasPagamento: {
     icon: <ShoppingBag className="w-5 h-5" />,
   },
 ];
+
+/** Extrai mensagem legível de um erro da API (detail pode ser string ou lista do FastAPI). */
+function mensagemDeErro(err: unknown): string {
+  const detail = (err as AxiosError<{ detail?: unknown }>).response?.data
+    ?.detail;
+  if (typeof detail === "string" && detail.trim()) return detail;
+  if (Array.isArray(detail)) {
+    const mensagens = detail
+      .map((item) =>
+        item && typeof item === "object" && "msg" in item
+          ? String((item as { msg: unknown }).msg)
+          : String(item),
+      )
+      .filter((msg) => msg.trim());
+    if (mensagens.length > 0) return mensagens.join(" ");
+  }
+  return "Erro ao finalizar pedido. Tente novamente.";
+}
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -88,10 +107,20 @@ export default function CheckoutPage() {
     if (!endereco.trim())
       return setError("O endereço de entrega é obrigatório");
     if (!pagamento) return setError("Selecione uma forma de pagamento");
-    if (pagamento === "DINHEIRO" && !troco.trim())
-      return setError("Informe o valor para troco");
     if (!telefone.trim())
       return setError("O telefone de contato é obrigatório");
+
+    let trocoValor: number | undefined;
+    if (pagamento === "DINHEIRO") {
+      if (!troco.trim()) return setError("Informe o valor para troco");
+      trocoValor = Number(troco.replace(",", "."));
+      if (!Number.isFinite(trocoValor) || trocoValor < 0)
+        return setError("Informe um valor de troco válido");
+      if (trocoValor < total)
+        return setError(
+          "O valor de troco deve ser maior ou igual ao total do pedido",
+        );
+    }
 
     setLoading(true);
     try {
@@ -107,8 +136,8 @@ export default function CheckoutPage() {
         forma_pagamento: pagamento,
         telefone_contato: telefone.trim(),
       };
-      if (pagamento === "DINHEIRO") {
-        corpo.troco_para = parseFloat(troco.replace(",", "."));
+      if (pagamento === "DINHEIRO" && trocoValor !== undefined) {
+        corpo.troco_para = trocoValor;
       }
       if (observacao.trim()) {
         corpo.observacao = observacao.trim();
@@ -121,11 +150,7 @@ export default function CheckoutPage() {
       clearCart();
       navigate(ROTAS.pedidoSucesso, { state: { pedidoId } });
     } catch (err) {
-      const axiosError = err as AxiosError<{ detail?: string }>;
-      setError(
-        axiosError.response?.data?.detail ||
-          "Erro ao finalizar pedido. Tente novamente.",
-      );
+      setError(mensagemDeErro(err));
     } finally {
       setLoading(false);
     }
@@ -165,25 +190,48 @@ export default function CheckoutPage() {
             <h2 className="font-black text-sm uppercase text-slate-400 mb-3">
               Itens do pedido
             </h2>
-            <div className="max-h-28 space-y-2 overflow-y-auto pr-1">
-              {currentCart.map((item) => (
-                <div
-                  key={`${item.product.id}:${item.tamanho ?? ""}`}
-                  className="flex justify-between text-sm gap-3"
-                >
-                  <span className="text-slate-700">
-                    {item.quantity}x {item.product.nome}
-                    {item.tamanho && (
-                      <span className="text-slate-400 font-bold ml-1">
-                        ({item.tamanho})
+            <div className="max-h-52 space-y-2 overflow-y-auto pr-1">
+              {currentCart.map((item) => {
+                const preco = precoNoCarrinho(item.product, item.tamanho);
+                const rotulo = item.tamanho
+                  ? (ROTULOS_TAMANHO[item.tamanho] ?? item.tamanho)
+                  : "Preço fixo";
+                return (
+                  <div
+                    key={`${item.product.id}:${item.tamanho ?? ""}`}
+                    className="flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <span className="text-[9px] font-black uppercase tracking-widest text-orange-600">
+                        {item.product.categoria}
                       </span>
-                    )}
-                  </span>
-                  <span className="font-bold whitespace-nowrap">
-                    R$ {(item.product.preco * item.quantity).toFixed(2)}
-                  </span>
-                </div>
-              ))}
+                      <p className="truncate text-sm font-bold leading-tight text-slate-700">
+                        {item.quantity}x {item.product.nome}
+                      </p>
+                      <p className="mt-0.5 text-[10px] font-semibold text-slate-400">
+                        {rotulo}
+                        {preco !== null && ` · R$ ${preco.toFixed(2)} / un`}
+                      </p>
+                    </div>
+                    <span
+                      className="shrink-0 pt-0.5 text-sm font-black whitespace-nowrap"
+                      aria-label={`Subtotal de ${item.product.nome} (${rotulo}): ${
+                        preco === null
+                          ? "preço a definir"
+                          : `R$ ${(preco * item.quantity).toFixed(2)}`
+                      }`}
+                    >
+                      {preco === null ? (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          A definir
+                        </span>
+                      ) : (
+                        `R$ ${(preco * item.quantity).toFixed(2)}`
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
             <div className="mt-3 pt-3 border-t border-slate-100 flex justify-between font-black text-base">
               <span>
@@ -230,9 +278,12 @@ export default function CheckoutPage() {
               </span>
             </h2>
             <input
+              id="telefone-contato"
+              aria-label="Telefone de contato"
               value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
               placeholder="(11) 99999-9999"
+              maxLength={20}
               aria-required="true"
               className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm"
             />
@@ -256,6 +307,7 @@ export default function CheckoutPage() {
                   key={f.value}
                   type="button"
                   onClick={() => setPagamento(f.value)}
+                  aria-pressed={pagamento === f.value}
                   className={`flex items-center gap-2 p-3 rounded-xl border-2 text-sm font-bold transition-all ${
                     pagamento === f.value
                       ? "border-orange-600 bg-orange-50 text-orange-700"
@@ -280,11 +332,15 @@ export default function CheckoutPage() {
                   className="overflow-hidden"
                 >
                   <div className="pt-3">
-                    <label className="text-xs font-bold text-slate-500 mb-1 block">
+                    <label
+                      htmlFor="troco-para"
+                      className="text-xs font-bold text-slate-500 mb-1 block"
+                    >
                       Troco para quanto?
                       <span className="ml-2 text-orange-600">Obrigatório</span>
                     </label>
                     <input
+                      id="troco-para"
                       value={troco}
                       onChange={(e) => setTroco(e.target.value)}
                       placeholder="R$ 0,00"

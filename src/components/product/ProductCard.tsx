@@ -3,7 +3,10 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import {
   ehPizza,
+  precoDoItem,
+  precoNoCarrinho,
   TAMANHOS_PIZZA,
+  temPrecosPorTamanho,
   type ItemCardapio,
   type TamanhoPizza,
 } from "../../types/product";
@@ -21,6 +24,20 @@ const rotulosTamanho: Record<TamanhoPizza, string> = {
   grande: "G",
 };
 
+/**
+ * Define se o tamanho pode ser selecionado:
+ * backend antigo (campo ausente) = fallback, todos os tamanhos disponíveis;
+ * campo presente mas sem preço para o tamanho = "preço a definir".
+ */
+function tamanhoSelecionavel(
+  product: ItemCardapio,
+  tamanho: TamanhoPizza | null,
+): boolean {
+  if (!tamanho) return true;
+  if (!temPrecosPorTamanho(product)) return true;
+  return precoDoItem(product, tamanho) !== null;
+}
+
 export default function ProductCard({
   product,
   imageUrl,
@@ -28,8 +45,13 @@ export default function ProductCard({
   onAdd,
 }: ProductCardProps) {
   const pizza = ehPizza(product);
+  const comPrecosTamanho = temPrecosPorTamanho(product);
   const [tamanho, setTamanho] = useState<TamanhoPizza | null>(null);
-  const podeAdicionar = !pizza || tamanho !== null;
+  const podeAdicionar =
+    !pizza || (tamanho !== null && tamanhoSelecionavel(product, tamanho));
+  const preco = precoNoCarrinho(product, tamanho ?? undefined);
+  // Backend antigo (sem campo de preços por tamanho): valor base é referência.
+  const refPlaceholder = pizza && !comPrecosTamanho;
 
   return (
     <motion.article
@@ -94,12 +116,22 @@ export default function ProductCard({
 
         <div className="flex justify-between items-center mt-2">
           <span className="text-2xl font-black">
-            <span className="text-sm font-bold text-orange-600 mr-1">R$</span>
-            {product.preco.toFixed(2)}
-            {pizza && (
-              <span className="text-[10px] font-bold text-slate-400 align-middle ml-1">
-                (ref.)
+            {preco === null ? (
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Preço a definir
               </span>
+            ) : (
+              <>
+                <span className="text-sm font-bold text-orange-600 mr-1">
+                  R$
+                </span>
+                {preco.toFixed(2)}
+                {refPlaceholder && (
+                  <span className="text-[10px] font-bold text-slate-400 align-middle ml-1">
+                    (ref.)
+                  </span>
+                )}
+              </>
             )}
           </span>
           <button

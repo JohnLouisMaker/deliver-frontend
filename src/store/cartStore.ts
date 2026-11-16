@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { ehPizza, type ItemCardapio, type TamanhoPizza } from "../types/product";
+import {
+  ehPizza,
+  precoNoCarrinho,
+  type ItemCardapio,
+  type TamanhoPizza,
+} from "../types/product";
 
 /**
  * Item do pedido local (informativo). O preço exibido é de referência:
@@ -20,6 +25,12 @@ interface CartState {
     tamanho?: TamanhoPizza,
   ) => void;
   removeFromCart: (itemId: number, tamanho?: TamanhoPizza) => void;
+  /** Define a quantidade da linha; <= 0 remove o item. */
+  updateQuantity: (
+    itemId: number,
+    tamanho: TamanhoPizza | undefined,
+    quantity: number,
+  ) => void;
   clearCart: () => void;
   totalItems: () => number;
   subtotal: () => number;
@@ -73,16 +84,37 @@ const useCartStore = create<CartState>((set, get) => ({
       ),
     });
   },
+  updateQuantity: (itemId, tamanho, quantity) => {
+    const chave = chaveItem(itemId, tamanho);
+    if (quantity <= 0) {
+      set({
+        currentCart: get().currentCart.filter(
+          (item) => chaveItem(item.product.id, item.tamanho) !== chave,
+        ),
+      });
+      return;
+    }
+    set({
+      currentCart: get().currentCart.map((item) =>
+        chaveItem(item.product.id, item.tamanho) === chave
+          ? { ...item, quantity }
+          : item,
+      ),
+    });
+  },
   clearCart: () => set({ currentCart: [] }),
   totalItems: () => {
     return get().currentCart.reduce((total, item) => total + item.quantity, 0);
   },
-  /** Subtotal informativo: usa o preço base para pizza aguardando preço por tamanho. */
+  /**
+   * Subtotal informativo: usa preço por tamanho quando o backend o expõe.
+   * Linhas com preço a definir (null) não entram na soma.
+   */
   subtotal: () => {
-    return get().currentCart.reduce(
-      (total, item) => total + item.product.preco * item.quantity,
-      0,
-    );
+    return get().currentCart.reduce((total, item) => {
+      const preco = precoNoCarrinho(item.product, item.tamanho);
+      return preco === null ? total : total + preco * item.quantity;
+    }, 0);
   },
 }));
 
