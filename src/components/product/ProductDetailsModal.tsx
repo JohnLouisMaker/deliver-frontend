@@ -1,13 +1,22 @@
-import { Minus, Plus, X } from "lucide-react";
+import {
+  Minus,
+  Plus,
+  X,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
-import type { ItemCardapio } from "../../types/product";
+import {
+  ehPizza,
+  TAMANHOS_PIZZA,
+  type ItemCardapio,
+  type TamanhoPizza,
+} from "../../types/product";
 
 interface ProductDetailsModalProps {
   product: ItemCardapio;
   imageUrl: string;
   onClose: () => void;
-  onAdd: (product: ItemCardapio, quantity: number) => void;
+  onAdd: (product: ItemCardapio, quantity: number, tamanho?: TamanhoPizza) => void;
 }
 
 export default function ProductDetailsModal({
@@ -17,6 +26,9 @@ export default function ProductDetailsModal({
   onAdd,
 }: ProductDetailsModalProps) {
   const [quantity, setQuantity] = useState(1);
+  const pizza = ehPizza(product);
+  const [tamanho, setTamanho] = useState<TamanhoPizza | null>(null);
+  const podeAdicionar = !pizza || tamanho !== null;
 
   return (
     <div className="fixed inset-0 z-50">
@@ -70,6 +82,40 @@ export default function ProductDetailsModal({
             </div>
 
             <div className="space-y-6">
+              {pizza && (
+                <div>
+                  <span className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+                    Tamanho
+                  </span>
+                  <div
+                    role="radiogroup"
+                    aria-label={`Tamanho para ${product.nome}`}
+                    className="grid grid-cols-3 gap-2"
+                  >
+                    {TAMANHOS_PIZZA.map((valor) => (
+                      <button
+                        key={valor}
+                        type="button"
+                        role="radio"
+                        aria-checked={tamanho === valor}
+                        onClick={() => setTamanho(valor)}
+                        className={`rounded-2xl border-2 py-3 text-sm font-black uppercase tracking-wide transition-all ${
+                          tamanho === valor
+                            ? "border-orange-600 bg-orange-50 text-orange-700"
+                            : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300"
+                        }`}
+                      >
+                        {valor.charAt(0).toUpperCase() + valor.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[11px] text-slate-400">
+                    Preço por tamanho em atualização no cardápio — o total é
+                    calculado pelo backend ao finalizar o pedido.
+                  </p>
+                </div>
+              )}
+
               <div className="flex items-center gap-4">
                 <div className="flex items-center bg-slate-100 rounded-2xl p-1">
                   <button
@@ -103,13 +149,21 @@ export default function ProductDetailsModal({
                 <span className="text-3xl font-black">
                   <span className="text-orange-600 text-lg mr-1">R$</span>
                   {(product.preco * quantity).toFixed(2)}
+                  {pizza && (
+                    <span className="text-xs font-bold text-slate-400 align-middle ml-1">
+                      (ref.)
+                    </span>
+                  )}
                 </span>
                 <button
                   type="button"
-                  onClick={() => onAdd(product, quantity)}
-                  className="flex-1 bg-orange-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95"
+                  disabled={!podeAdicionar}
+                  onClick={() =>
+                    onAdd(product, quantity, tamanho ?? undefined)
+                  }
+                  className="flex-1 bg-orange-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 active:scale-95 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:bg-slate-300"
                 >
-                  Adicionar
+                  {podeAdicionar ? "Adicionar" : "Selecione o tamanho"}
                 </button>
               </div>
             </div>

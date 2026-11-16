@@ -166,7 +166,7 @@ export default function HomePage() {
             >
               <Search className="w-6 h-6" />
             </button>
-            {/* Carrinho */}
+            {/* Pedido */}
             <div ref={cartRef} className="relative">
               <button
                 className="hidden lg:block p-3 bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition-colors relative"
@@ -340,7 +340,9 @@ export default function HomePage() {
                   product={item}
                   imageUrl={getImageUrl(item.imagem_url)}
                   onSelect={abrirDetalhesProduto}
-                  onAdd={(product) => addToCart(product, 1)}
+                  onAdd={(product, tamanho) =>
+                    addToCart(product, 1, tamanho)
+                  }
                 />
               ))}
             </div>
@@ -348,7 +350,7 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* Carrinho Mobile */}
+      {/* Pedido Mobile */}
       <AnimatePresence>
         {currentCart.length > 0 && !cartCurrentOpen && (
           <motion.button
@@ -367,19 +369,22 @@ export default function HomePage() {
               </div>
               <div className="min-w-0 text-left">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Seu carrinho
+                  Seu pedido
                 </p>
                 <p className="truncate text-sm font-black">Ver pedido</p>
               </div>
             </div>
-            <span className="shrink-0 font-black">
-              R$ {subtotal.toFixed(2)}
-            </span>
+            <div className="shrink-0 text-right">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                {totalItems} {totalItems === 1 ? "item" : "itens"}
+              </p>
+              <span className="font-black">R$ {subtotal.toFixed(2)}</span>
+            </div>
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* Carrinho Mobile Aberto */}
+      {/* Pedido Mobile Aberto */}
       <AnimatePresence>
         {cartCurrentOpen && (
           <motion.div
@@ -411,8 +416,8 @@ export default function HomePage() {
             product={selectedProduct}
             imageUrl={getImageUrl(selectedProduct.imagem_url)}
             onClose={fecharDetalhesProduto}
-            onAdd={(product, quantity) => {
-              addToCart(product, quantity);
+            onAdd={(product, quantity, tamanho) => {
+              addToCart(product, quantity, tamanho);
               fecharDetalhesProduto();
             }}
           />
