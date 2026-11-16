@@ -86,9 +86,7 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
         <ShoppingBag className="w-16 h-16 text-slate-300 mb-4" />
-        <h2 className="text-xl font-black text-slate-700 mb-2">
-          Pedido vazio
-        </h2>
+        <h2 className="text-xl font-black text-slate-700 mb-2">Pedido vazio</h2>
         <p className="text-slate-500 mb-6">Adicione itens antes de finalizar</p>
         <button
           onClick={() => navigate(ROTAS.cardapio)}
@@ -103,12 +101,31 @@ export default function CheckoutPage() {
   async function finalizarPedido(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    const enderecoLimpo = endereco.trim();
+    const telefoneLimpo = telefone.trim().replace(/[^0-9]/g, "");
 
-    if (!endereco.trim())
-      return setError("O endereço de entrega é obrigatório");
+    if (!enderecoLimpo) return setError("O endereço de entrega é obrigatório");
+    if (enderecoLimpo.length < 5)
+      return setError(
+        "Informe um endereço de entrega válido (mínimo 5 caracteres)",
+      );
+    if (enderecoLimpo.length > 100)
+      return setError(
+        "Informe um endereço de entrega válido (máximo 100 caracteres)",
+      );
     if (!pagamento) return setError("Selecione uma forma de pagamento");
-    if (!telefone.trim())
-      return setError("O telefone de contato é obrigatório");
+    if (!telefoneLimpo) return setError("O telefone de contato é obrigatório");
+    if (telefoneLimpo.length < 10)
+      return setError(
+        "Complete o telefone de contato com DDD e número (mínimo 10 dígitos)",
+      );
+    if (telefoneLimpo.length > 11)
+      return setError(
+        "Digite um telefone de contato válido (máximo 11 dígitos, incluindo DDD)",
+      );
+
+    if (!formasPagamento.some((p) => p.value === pagamento))
+      return setError("Selecione uma forma de pagamento válida");
 
     let trocoValor: number | undefined;
     if (pagamento === "DINHEIRO") {
@@ -132,9 +149,9 @@ export default function CheckoutPage() {
           quantidade: item.quantity,
           ...(item.tamanho ? { tamanho: item.tamanho } : {}),
         })),
-        endereco_entrega: endereco.trim(),
+        endereco_entrega: enderecoLimpo,
         forma_pagamento: pagamento,
-        telefone_contato: telefone.trim(),
+        telefone_contato: telefoneLimpo,
       };
       if (pagamento === "DINHEIRO" && trocoValor !== undefined) {
         corpo.troco_para = trocoValor;
