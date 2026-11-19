@@ -1,59 +1,57 @@
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-%2320232a.svg?logo=react&logoColor=%2361DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=fff)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-%2338B2AC.svg?logo=tailwind-css&logoColor=white)
-![React Hook Form](https://img.shields.io/badge/React%20Hook%20Form-EC5990?logo=reacthookform&logoColor=fff)
+![CI](https://github.com/JohnLouisMaker/deliver-frontend/actions/workflows/ci.yml/badge.svg)
 
-# Deliver Frontend
+# Deliver — Frontend
 
-Frontend de um aplicativo de delivery de comida, desenvolvido em **React + TypeScript + Vite**, com autenticação JWT (access + refresh token) e consumo de uma API **FastAPI**.
+Interface de um aplicativo de delivery de comida: cardápio, carrinho e
+checkout, com autenticação JWT e consumo de uma API REST própria em FastAPI.
+
+**Status:** em desenvolvimento. Catálogo, carrinho, checkout, autenticação e
+edição de perfil estão funcionando; histórico de pedidos e detalhes do pedido
+estão no roadmap.
+
+**Backend:** [deliver-backend](https://github.com/JohnLouisMaker/deliver-backend)
+
+<!-- Adicione aqui uma imagem do cardápio e do carrinho:
+     ![Cardápio](docs/cardapio.png)
+     ![Carrinho](docs/carrinho.png) -->
 
 ## Funcionalidades
 
-- **Autenticação completa**: login, cadastro e recuperação de senha
-- **Sessão persistente**: access token + refresh token com renovação automática (interceptors do Axios)
-- **Rotas protegidas**: acesso à área logada somente para usuários autenticados
-- **Cardápio dinâmico**: listagem de itens (lanches, pizzas, bebidas, sobremesas) consumidos direto da API
-- **UI moderna**: Tailwind CSS + animações com Framer Motion + ícones Lucide
+- **Catálogo** — itens carregados da API, com modal de detalhes por produto
+- **Carrinho** — estado global com Zustand, quantidade por item e tamanho
+  obrigatório para pizzas
+- **Checkout** — pedido enviado para a API (`POST /pedidos`); o preço exibido
+  no carrinho é de referência e o backend recalcula com os valores oficiais
+- **Autenticação** — login, cadastro e recuperação de senha por código
+  enviado por e-mail
+- **Sessão persistente** — access token + refresh token, com renovação
+  automática via interceptor do Axios
+- **Rotas protegidas** — área logada acessível apenas com sessão válida
+- **Perfil** — edição dos dados do usuário (`PATCH /auth/me`)
 
 ## Stack
 
-| Categoria                | Tecnologia            |
-| ------------------------- | ---------------------- |
-| Framework                 | React 19 + TypeScript  |
-| Build tool                | Vite 7                 |
-| Estilização                | Tailwind CSS 4         |
-| Roteamento                 | React Router DOM 7     |
-| Gerenciamento de estado    | Zustand                |
-| Formulários                | React Hook Form + Zod  |
-| Requisições HTTP           | Axios                  |
-| Animações                  | Motion (Framer Motion) |
-| Ícones                     | Lucide React           |
-| Autenticação               | JWT (jwt-decode)       |
+| Categoria        | Tecnologia            |
+| ---------------- | --------------------- |
+| Framework        | React 19 + TypeScript |
+| Build tool       | Vite 7                |
+| Estilização      | Tailwind CSS 4        |
+| Roteamento       | React Router DOM 7    |
+| Estado global    | Zustand               |
+| Formulários      | React Hook Form + Zod |
+| Requisições HTTP | Axios                 |
+| Animações        | Motion                |
+| Ícones           | Lucide React          |
+| Autenticação     | JWT (jwt-decode)      |
 
-## Estrutura do projeto
+## Como rodar
 
-```
-src/
-├── api/          # Cliente Axios + interceptors de auth/refresh
-├── assets/       # Imagens e arquivos estáticos
-├── pages/        # Páginas (Login, SignUp, RecoverPassword, Home)
-├── routes/       # Componentes de rota (ProtectedRoute)
-├── schemas/      # Schemas de validação (Zod)
-├── store/        # Estado global (Zustand) — autenticação
-├── types/        # Tipagens compartilhadas
-├── App.tsx       # Definição das rotas da aplicação
-└── main.tsx      # Ponto de entrada
-```
-
-## Começando
-
-### Pré-requisitos
-
-- Node.js 20+
-- Uma instância do backend rodando (FastAPI)
-
-### Instalação
+Pré-requisitos: Node.js 20+ e o
+[backend](https://github.com/JohnLouisMaker/deliver-backend) rodando.
 
 ```bash
 git clone https://github.com/JohnLouisMaker/deliver-frontend.git
@@ -61,50 +59,73 @@ cd deliver-frontend
 npm install
 ```
 
-### Variáveis de ambiente
-
-Crie um arquivo `.env` na raiz do projeto:
+Crie um `.env` na raiz apontando para a API:
 
 ```env
 VITE_API_URL=http://localhost:8000
 ```
 
-### Rodando em desenvolvimento
-
 ```bash
-npm run dev
+npm run dev     # http://localhost:5173
+npm run build   # build de produção
+npm run lint    # ESLint
 ```
 
-A aplicação estará disponível em `http://localhost:5173`.
+## Docker
 
-### Build de produção
-
-```bash
-npm run build
-npm run preview
-```
-
-### Lint
+A imagem é construída em dois estágios: o primeiro compila a aplicação com
+Node 20, o segundo serve apenas o `dist/` com Nginx — a imagem final não
+carrega Node nem as dependências de build. O `nginx.conf` faz fallback para
+`index.html`, o que é necessário para as rotas do React Router continuarem
+funcionando quando a página é recarregada.
 
 ```bash
-npm run lint
+docker build -t deliver-frontend .
+docker run -p 8080:80 deliver-frontend
 ```
+
+`VITE_API_URL` é resolvida **em tempo de build** (o Vite injeta a variável no
+bundle), então o `.env` precisa existir antes de rodar `docker build`.
 
 ## Integração com a API
 
-A aplicação consome um backend FastAPI através das seguintes rotas principais:
+| Método | Rota                      |
+| ------ | ------------------------- |
+| POST   | `/auth/login`             |
+| POST   | `/auth/signup`            |
+| POST   | `/auth/forgot-password`   |
+| POST   | `/auth/verify-reset-code` |
+| POST   | `/auth/reset-password`    |
+| POST   | `/auth/refresh`           |
+| GET    | `/auth/me`                |
+| PATCH  | `/auth/me`                |
+| GET    | `/cardapio/`              |
+| GET    | `/cardapio/{id}`          |
+| POST   | `/pedidos`                |
 
-- `POST /auth/login`
-- `POST /auth/signup`
-- `GET /auth/me`
-- `POST /auth/refresh`
-- `GET /cardapio/`
-- `/pedidos/...`
+## Estrutura
 
-A URL base da API é definida pela variável de ambiente `VITE_API_URL`.
+```
+src/
+├── api/          # Cliente Axios + interceptors de auth/refresh
+├── components/   # auth, cart, product, profile, footer
+├── pages/        # Home, Login, SignUp, RecoverPassword, Checkout,
+│                 # PedidoSucesso, EditProfile
+├── routes/       # ProtectedRoute e definição dos paths
+├── schemas/      # Schemas de validação (Zod)
+├── store/        # authStore e cartStore (Zustand)
+├── types/        # Tipagens compartilhadas
+├── App.tsx       # Definição das rotas
+└── main.tsx      # Ponto de entrada
+```
+
+## CI
+
+GitHub Actions roda **lint + build** em todo push para `main`, `feat/**`,
+`fix/**` e `refactor/**`, e em pull requests para `main`.
 
 ## Roadmap
 
-- [ ] Implementar carrinho de compras / fluxo de pedido
-- [ ] Reforçar a proteção de autenticação da rota `/home`
+- [ ] Histórico de pedidos
 - [ ] Página de detalhes do pedido
+- [ ] Testes automatizados no frontend
