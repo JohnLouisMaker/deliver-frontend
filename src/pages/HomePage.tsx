@@ -1,4 +1,4 @@
-import { Hamburger, Search, ShoppingBag, User } from "lucide-react";
+import { Hamburger, Moon, Search, ShoppingBag, Sun, User } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +18,9 @@ import useCartStore, {
   selectCartSubtotal,
   selectCartTotalItems,
 } from "../store/cartStore";
+
+import useThemeStore from "../store/themeStore";
+
 import { type ItemCardapio } from "../types/product";
 
 export default function HomePage() {
@@ -38,6 +41,9 @@ export default function HomePage() {
   const [cartCurrentOpen, setCartCurrentOpen] = useState(false);
   const [modalUser, setModalUser] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  const theme = useThemeStore((state) => state.theme);
+  const toggleTheme = useThemeStore((state) => state.toggleTheme);
 
   const userRef = useRef<HTMLDivElement | null>(null);
   const cartRef = useRef<HTMLDivElement | null>(null);
@@ -133,28 +139,28 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-900">
+    <div className="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
       {/* Barra de navegação */}
-      <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <nav className="sticky top-0 z-40 border-b border-slate-100 bg-white/80 px-6 py-4 backdrop-blur-md transition-colors dark:border-slate-800 dark:bg-slate-950/80">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-600 rounded-xl shadow-lg shadow-orange-200">
-              <Hamburger className="text-white w-6 h-6" />
+            <div className="rounded-xl bg-orange-600 p-2 shadow-lg shadow-orange-200 dark:shadow-orange-950/50">
+              <Hamburger className="h-6 w-6 text-white" />
             </div>
 
-            <h1 className="text-xl font-black tracking-tighter uppercase">
+            <h1 className="text-xl font-black uppercase tracking-tighter">
               Menuu<span className="text-orange-600">.</span>
             </h1>
           </div>
 
           {/* Campo de busca — desktop */}
-          <div className="hidden md:flex flex-1 max-w-md mx-10 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+          <div className="relative mx-10 hidden max-w-md flex-1 md:flex">
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
             <input
               type="text"
               placeholder="O que vamos comer hoje?"
-              className="w-full pl-12 pr-4 py-3 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-orange-500 transition-all"
+              className="w-full rounded-2xl border-none bg-slate-100 py-3 pr-4 pl-12 transition-all focus:ring-2 focus:ring-orange-500 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
             />
           </div>
 
@@ -162,20 +168,33 @@ export default function HomePage() {
             {/* Busca mobile */}
             <button
               onClick={() => setSearchOpen(!searchOpen)}
-              className="p-3 md:hidden bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition-colors"
+              className="rounded-2xl bg-slate-100 p-3 text-slate-600 transition-colors hover:bg-orange-50 hover:text-orange-600 md:hidden dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
             >
-              <Search className="w-6 h-6" />
+              <Search className="h-6 w-6" />
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label="Alternar tema"
+              className="rounded-2xl bg-slate-100 p-3 text-slate-600 transition-colors hover:bg-orange-50 hover:text-orange-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              {theme === "light" ? (
+                <Moon className="h-6 w-6" />
+              ) : (
+                <Sun className="h-6 w-6" />
+              )}
             </button>
             {/* Pedido */}
             <div ref={cartRef} className="relative">
               <button
-                className="hidden lg:block p-3 bg-slate-100 rounded-2xl hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition-colors relative"
+                className="relative hidden rounded-2xl bg-slate-100 p-3 text-slate-600 transition-colors hover:bg-orange-50 hover:text-orange-600 lg:block dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                 onClick={() => setCartCurrentOpen(!cartCurrentOpen)}
               >
-                <ShoppingBag className="w-6 h-6" />
+                <ShoppingBag className="h-6 w-6" />
 
                 {currentCart.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-600 text-xs font-bold text-white">
                     {totalItems}
                   </span>
                 )}
@@ -189,7 +208,7 @@ export default function HomePage() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="hidden lg:block absolute right-0 mt-3 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 p-5 z-50"
+                    className="absolute right-0 mt-3 hidden w-80 rounded-3xl border border-slate-100 bg-white p-5 shadow-2xl lg:block dark:border-slate-800 dark:bg-slate-900"
                   >
                     <CartPanel onClose={() => setCartCurrentOpen(false)} />
                   </motion.div>
@@ -204,12 +223,12 @@ export default function HomePage() {
                 aria-expanded={modalUser}
                 aria-haspopup="dialog"
                 aria-controls="profile-modal"
-                className="flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white p-1 sm:pr-4 transition-colors hover:border-orange-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+                className="flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white p-1 transition-colors hover:border-orange-300 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:outline-none sm:pr-4 dark:border-slate-700 dark:bg-slate-900"
               >
-                <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold uppercase">
-                  {user?.nome?.charAt(0) || <User className="w-5 h-5" />}
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-600 font-bold text-white uppercase">
+                  {user?.nome?.charAt(0) || <User className="h-5 w-5" />}
                 </div>
-                <span className="hidden text-sm font-bold text-slate-700 sm:inline">
+                <span className="hidden text-sm font-bold text-slate-700 sm:inline dark:text-slate-200">
                   {user?.nome?.split(" ")[0] || "Perfil"}
                 </span>
               </button>
@@ -223,7 +242,7 @@ export default function HomePage() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute right-0 z-50 mt-3 hidden w-80 rounded-3xl border border-slate-100 bg-white p-5 shadow-2xl lg:block"
+                    className="absolute right-0 z-50 mt-3 hidden w-80 rounded-3xl border border-slate-100 bg-white p-5 shadow-2xl lg:block dark:border-slate-800 dark:bg-slate-900"
                     onClick={(event) => event.stopPropagation()}
                   >
                     <ProfilePanel
@@ -297,7 +316,7 @@ export default function HomePage() {
         {/* Banner promocional */}
         <section className="relative w-full h-48 sm:h-64 bg-orange-600 rounded-[2.5rem] overflow-hidden mb-12 flex items-center px-6 sm:px-12 text-white shadow-2xl shadow-orange-200">
           <div className="z-10">
-            <span className="inline-block px-4 py-1 bg-orange-500 text-xs font-black rounded-full mb-4 tracking-widest uppercase">
+            <span className="inline-block px-4 py-1 bg-orange-500 dark:bg-orange-400 text-xs font-black rounded-full mb-4 tracking-widest uppercase">
               CUPOM: FAMINTO20
             </span>
 
@@ -340,9 +359,7 @@ export default function HomePage() {
                   product={item}
                   imageUrl={getImageUrl(item.imagem_url)}
                   onSelect={abrirDetalhesProduto}
-                  onAdd={(product, tamanho) =>
-                    addToCart(product, 1, tamanho)
-                  }
+                  onAdd={(product, tamanho) => addToCart(product, 1, tamanho)}
                 />
               ))}
             </div>

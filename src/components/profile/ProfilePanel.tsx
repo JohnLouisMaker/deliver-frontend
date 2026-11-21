@@ -61,7 +61,7 @@ export default function ProfilePanel({
       <button
         type="button"
         onClick={onLogout}
-        className="flex w-full items-center gap-2 rounded-xl bg-slate-100 px-3 py-2.5 text-sm font-bold text-red-600 transition-colors hover:bg-red-50"
+        className="flex w-full items-center gap-2 rounded-xl bg-slate-100 px-3 py-2.5 text-sm font-bold text-red-600 transition-colors hover:bg-red-50 dark:border dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-900/60"
       >
         <LogOut className="h-4 w-4" />
         Sair da conta

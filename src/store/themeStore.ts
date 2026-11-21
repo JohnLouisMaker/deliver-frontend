@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export type Theme = "light" | "dark";
 
@@ -13,10 +14,15 @@ const oppositeTheme: Record<Theme, Theme> = {
   dark: "light",
 };
 
-const useThemeStore = create<ThemeState>()((set, get) => ({
-  theme: "light",
-  setTheme: (theme) => set({ theme }),
-  toggleTheme: () => set({ theme: oppositeTheme[get().theme] }),
-}));
+const useThemeStore = create<ThemeState>()(
+  persist(
+    (set, get) => ({
+      theme: "light",
+      setTheme: (theme) => set({ theme }),
+      toggleTheme: () => set({ theme: oppositeTheme[get().theme] }),
+    }),
+    { name: "theme-storage" },
+  ),
+);
 
 export default useThemeStore;
