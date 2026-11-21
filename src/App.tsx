@@ -10,13 +10,19 @@ import SignUpPage from "./pages/SignUpPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { ROTAS } from "./routes/paths";
 import useAuthStore from "./store/authStore";
+import useThemeStore from "./store/themeStore";
 
 export default function App() {
   const { isLoading, initializeAuth } = useAuthStore();
+  const theme = useThemeStore((state) => state.theme);
 
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   if (isLoading) {
     return (
